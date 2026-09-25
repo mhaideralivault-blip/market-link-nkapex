@@ -7,7 +7,7 @@
   --orange: #e2542b;
   --sun: #f2b632;
   --ink: #16241b;
-  --muted: #6b7468;
+  --muted: #566052;
   --line: #e2dac6;
   --bg: #f7f2e8;
   --cream-2: #efe7d4;
@@ -395,8 +395,8 @@ main:focus { outline: none; }
 .btn-xl { padding: 16px 30px; font-size: 1.02rem; border-radius: 99px; }
 .btn-lg { padding: 13px 26px; }
 .btn-pill { border-radius: 99px; }
-.btn-tomato { background: var(--orange); border-color: var(--orange); color: #fff; }
-.btn-tomato:hover { background: #c9431d; border-color: #c9431d; }
+.btn-tomato { background: #c2410c; border-color: #c2410c; color: #fff; }
+.btn-tomato:hover { background: #9a3412; border-color: #9a3412; }
 .btn-glass { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.55); color: #fff; backdrop-filter: blur(8px); }
 .btn-glass:hover { background: #fff; color: var(--green-900); border-color: #fff; }
 .btn-light { background: #fff; color: var(--green-900); border-color: #fff; }
@@ -408,7 +408,8 @@ main:focus { outline: none; }
 /* ---- hero ---- */
 .home { display: flex; flex-direction: column; }
 .hero { position: relative; isolation: isolate; color: #fff; display: flex; flex-direction: column; justify-content: flex-end; min-height: min(86vh, 860px); }
-.hero-bg { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(10,32,21,.92) 0%, rgba(10,32,21,.62) 48%, rgba(10,32,21,.15) 100%), linear-gradient(0deg, rgba(10,32,21,.7), transparent 45%), url('/hero.jpg') center / cover; }
+.hero-bg { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(10,32,21,.92) 0%, rgba(10,32,21,.62) 48%, rgba(10,32,21,.15) 100%), linear-gradient(0deg, rgba(10,32,21,.7), transparent 45%), url('/hero-800.webp') center / cover; }
+@media (min-width: 900px) { .hero-bg { background-image: linear-gradient(90deg, rgba(10,32,21,.92) 0%, rgba(10,32,21,.62) 48%, rgba(10,32,21,.15) 100%), linear-gradient(0deg, rgba(10,32,21,.7), transparent 45%), url('/hero.webp'); } }
 .hero-inner { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(300px, 420px); gap: clamp(24px, 5vw, 80px); align-items: end; padding: 120px clamp(20px, 4vw, 72px) 56px; max-width: 1760px; width: 100%; margin: 0 auto; }
 .hero h1 { color: #fff; font-size: clamp(2.8rem, 7.2vw, 6.4rem); line-height: .98; letter-spacing: -.035em; margin: 16px 0 22px; max-width: 12ch; font-weight: 600; }
 .hero h1 em { font-style: italic; color: var(--sun); font-weight: 500; }
@@ -571,8 +572,9 @@ main:focus { outline: none; }
 .footer-grid a { color: #e3ecdf; text-decoration: none; }
 .footer-grid a:hover { color: var(--sun); text-decoration: none; }
 .footer .brand { color: #fff; }
-.footer .foot-cta { background: var(--orange); border-color: var(--orange); color: #fff; }
+.footer .foot-cta { background: #c2410c; border-color: #c2410c; color: #fff; }
 .foot-about { max-width: 320px; margin-bottom: 18px; }
+.foot-mark::before { content: 'MarketLink'; }
 .foot-mark { font-family: var(--font-display); font-weight: 700; font-size: clamp(4rem, 19.5vw, 20rem); line-height: .78; letter-spacing: -.05em; color: rgba(255,255,255,.07); white-space: nowrap; text-align: center; margin: 24px 0 -1.6vw; user-select: none; }
 .footer-bottom-wrap { border-top: 1px solid rgba(255,255,255,.14); background: var(--green-900); position: relative; }
 .footer-bottom { color: #9db7a3; }
@@ -852,7 +854,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--g
 .hero-copy > * { animation: hero-in .9s cubic-bezier(.2,.8,.2,1) both; }
 .hero-copy > :nth-child(2) { animation-delay: .08s; } .hero-copy > :nth-child(3) { animation-delay: .18s; } .hero-copy > :nth-child(4) { animation-delay: .28s; }
 .hero-panel { animation: hero-in .9s .35s cubic-bezier(.2,.8,.2,1) both; }
-@keyframes hero-in { from { opacity: 0; transform: translateY(28px); } }
+@keyframes hero-in { from { transform: translateY(16px); } }
 .hero { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .hero-bg, .hero-copy > *, .hero-panel { animation: none; } }
 
@@ -1552,3 +1554,6 @@ input:focus, select:focus, textarea:focus { border-color: var(--green-700); box-
 .notif-ico.t-harvest { background: #fff2d6; }
 @media (max-width: 860px) { .hv-layout { grid-template-columns: 1fr; } .hv-cal { position: static; } }
 @media (max-width: 480px) { .hv-card { padding: 14px; gap: 12px; } .hv-date { width: 54px; height: 62px; } }
+
+/* Bigger tap targets for the inline links on product / grower cards (Lighthouse: touch targets) */
+.product-body h3 a, .pc-stall a { display: inline-block; padding: 8px 0; }

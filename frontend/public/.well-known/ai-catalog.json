@@ -1,0 +1,10 @@
+{
+  "name": "MarketLink",
+  "description": "Farmers-market platform: browse markets, search produce and pre-order for pickup.",
+  "url": "/",
+  "resources": [
+    { "type": "documentation", "title": "Site overview for language models", "url": "/llms.txt" },
+    { "type": "webpage", "title": "Products", "url": "/products" },
+    { "type": "webpage", "title": "Markets", "url": "/markets" }
+  ]
+}

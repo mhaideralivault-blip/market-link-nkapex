@@ -74,7 +74,7 @@ export function FavoriteButton({ type, id }) {
 }
 
 export function ProductCard({ product }) {
-  const img = imageUrl(product.image);
+  const img = imageUrl(product.image, 320);
   const left = product.quantityAvailable;
   const { user } = useAuth();
   const cart = useCart();
@@ -175,7 +175,7 @@ export function StarInput({ value, onChange }) {
 
 // Compact row used in the home page lists.
 export function ProductMini({ product }) {
-  const img = imageUrl(product.image);
+  const img = imageUrl(product.image, 160);
   return (
     <Link to={productPath(product)} className="mini">
       <span className={`mini-img ${img ? '' : phClass(product.category?.name)}`}>{img ? <img src={img} alt="" loading="lazy" /> : <span aria-hidden>{categoryEmoji(product.category?.name)}</span>}</span>

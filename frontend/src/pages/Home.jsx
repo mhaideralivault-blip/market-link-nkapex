@@ -180,7 +180,7 @@ function WeekCalendar({ markets }) {
 }
 
 function CategoryBento({ tiles: raw, loading }) {
-  const tiles = raw.slice(0, 9).map((c) => ({ ...c, img: imageUrl(c.image) }));
+  const tiles = raw.slice(0, 9).map((c) => ({ ...c, img: imageUrl(c.image, 320) }));
   if (!tiles.length && !loading) return null;
   return (
     <section className="block">
@@ -298,7 +298,7 @@ function Story() {
 }
 
 function Growers({ growers, ready }) {
-  const list = growers.map((grower) => ({ f: grower, count: grower.productCount, img: imageUrl(grower.image) }));
+  const list = growers.map((grower) => ({ f: grower, count: grower.productCount, img: imageUrl(grower.image, 640) }));
   if (!list.length) return null;
   return (
     <section className="block">

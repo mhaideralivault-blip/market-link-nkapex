@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const multer = require('multer');
+const sharp = require('sharp');
 const Image = require('../models/Image');
 const { AppError } = require('../utils/helpers');
 
@@ -29,18 +30,37 @@ const uploadImage = (req, res, next) => {
   });
 };
 
-// GET /uploads/<path> — serve a stored image. Images never change under the same URL, so cache them hard.
+const ALLOWED_WIDTHS = [160, 320, 480, 640, 960];
+
+// GET /uploads/<path>[?w=480] — serve a stored image. Images never change under the same URL, so cache them hard.
+// With ?w= the picture is downscaled and, for browsers that accept it, sent as WebP (far smaller than the stored JPEG/PNG).
 const serveImage = async (req, res, next) => {
   try {
     const image = await Image.findOne({ path: [].concat(req.params.imagePath).join('/') }).select('contentType data');
     if (!image) return res.status(404).end();
+    let { contentType, data } = image;
+    const width = Number(req.query.w);
+    if (ALLOWED_WIDTHS.includes(width)) {
+      try {
+        const pipeline = sharp(data).resize({ width, withoutEnlargement: true });
+        if (/image\/webp/.test(req.headers.accept || '')) {
+          data = await pipeline.webp({ quality: 68 }).toBuffer();
+          contentType = 'image/webp';
+        } else {
+          data = await pipeline.toBuffer();
+        }
+      } catch {
+        /* unreadable image: fall back to the original bytes */
+      }
+    }
     res.set({
-      'Content-Type': image.contentType,
-      'Cache-Control': 'public, max-age=604800, immutable',
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=604800, s-maxage=31536000, immutable',
+      Vary: 'Accept',
       // The frontend runs on another origin, so allow it to embed these images.
       'Cross-Origin-Resource-Policy': 'cross-origin',
     });
-    res.send(image.data);
+    res.send(data);
   } catch (error) {
     next(error);
   }
