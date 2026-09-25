@@ -232,6 +232,7 @@ function SearchForm({ onDone, className = '', autoFocus = false }) {
         placeholder={listening ? 'Listening... say a product name' : voiceMsg || 'Search fresh produce, growers, markets...'}
         aria-label="Search products"
         autoFocus={autoFocus}
+        role="combobox"
         aria-autocomplete="list"
         aria-expanded={!!showList}
         autoComplete="off"

@@ -1,10 +1,11 @@
 {
+  "specVersion": "1.0",
   "name": "MarketLink",
   "description": "Farmers-market platform: browse markets, search produce and pre-order for pickup.",
   "url": "/",
-  "resources": [
-    { "type": "documentation", "title": "Site overview for language models", "url": "/llms.txt" },
-    { "type": "webpage", "title": "Products", "url": "/products" },
-    { "type": "webpage", "title": "Markets", "url": "/markets" }
+  "entries": [
+    { "name": "Site overview for language models", "type": "documentation", "description": "Markdown overview of the site and its main pages.", "url": "/llms.txt" },
+    { "name": "Products", "type": "webpage", "description": "Search and filter produce, dairy, baked goods and more.", "url": "/products" },
+    { "name": "Markets", "type": "webpage", "description": "Find farmers markets by day and location.", "url": "/markets" }
   ]
 }

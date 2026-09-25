@@ -1,0 +1,12 @@
+# MarketLink
+
+> MarketLink connects local farmers-market growers with customers. Browse markets and stalls on a map, see what is in stock, pre-order produce and pay in person at pickup.
+
+## Pages
+
+- [Home](/): overview, featured products and growers
+- [Markets](/markets): find farmers markets by day and location
+- [Products](/products): search and filter produce, dairy, baked goods and more
+- [Harvest calendar](/harvest): upcoming produce announced by farmers
+- [About](/about): about the platform and team
+- [Contact](/contact): contact details and location
