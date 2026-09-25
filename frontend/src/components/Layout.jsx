@@ -7,7 +7,7 @@ import { useCart } from '../context/CartContext';
 import { useNotifications } from '../context/NotificationsContext';
 import Chatbot from './Chatbot';
 import { DAYS, cap, farmerPath, marketPath, money, productPath } from '../utils';
-import { IconBell, IconCart, IconChevron, IconClose, IconHeart, IconHome, IconMap, IconMenu, IconSearch, IconStore, IconUser } from './Icons';
+import { IconBell, IconCart, IconChevron, IconClose, IconHeart, IconHome, IconMap, IconMenu, IconMic, IconSearch, IconStore, IconUser } from './Icons';
 
 function Logo() {
   return (
@@ -99,6 +99,10 @@ function SearchForm({ onDone, className = '', autoFocus = false }) {
   const [recent, setRecent] = useState(() => (autoFocus ? readRecent() : []));
   const box = useRef(null);
   const term = q.trim();
+  const [listening, setListening] = useState(false);
+  const [voiceMsg, setVoiceMsg] = useState('');
+  const recognition = useRef(null);
+  const SpeechRecognition = typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
   useEffect(() => {
     if (!term) {
@@ -157,6 +161,51 @@ function SearchForm({ onDone, className = '', autoFocus = false }) {
     if (event.key === 'Escape') setOpen(false);
   };
 
+  // Voice search (English): uses the browser's built-in Web Speech API, so no API key or backend is needed.
+  const VOICE_ERRORS = {
+    'not-allowed': 'Microphone blocked. Allow it in the browser to use voice search.',
+    'service-not-allowed': 'Microphone blocked. Allow it in the browser to use voice search.',
+    'no-speech': "Didn't catch that. Tap the mic and try again.",
+    'audio-capture': 'No microphone found.',
+    network: 'Voice search needs an internet connection.',
+  };
+  const stopVoice = () => {
+    recognition.current?.abort?.();
+    recognition.current = null;
+    setListening(false);
+  };
+  const toggleVoice = () => {
+    if (listening) return stopVoice();
+    setVoiceMsg('');
+    const rec = new SpeechRecognition();
+    rec.lang = 'en-US';
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+    let heard = '';
+    rec.onresult = (event) => {
+      heard = Array.from(event.results, (result) => result[0].transcript).join(' ').trim();
+      setQ(heard);
+      setOpen(true);
+    };
+    rec.onerror = (event) => {
+      if (event.error !== 'aborted') setVoiceMsg(VOICE_ERRORS[event.error] || 'Voice search failed. Please try again.');
+    };
+    rec.onend = () => {
+      recognition.current = null;
+      setListening(false);
+      const spoken = heard.replace(/[.?!]+$/, '').trim();
+      if (spoken) go(`/products?search=${encodeURIComponent(spoken)}`, spoken);
+    };
+    try {
+      rec.start();
+      recognition.current = rec;
+      setListening(true);
+    } catch {
+      setVoiceMsg('Voice search could not start. Please try again.');
+    }
+  };
+  useEffect(() => () => recognition.current?.abort?.(), []);
+
   const showList = open && (rows.length > 0 || (term && res));
   const GROUP = { product: 'Products', category: 'Categories', farmer: 'Growers', market: 'Markets', recent: 'Recent searches' };
   let last = '';
@@ -176,13 +225,18 @@ function SearchForm({ onDone, className = '', autoFocus = false }) {
           setOpen(true);
         }}
         onKeyDown={onKey}
-        placeholder="Search fresh produce, growers, markets..."
+        placeholder={listening ? 'Listening... say a product name' : voiceMsg || 'Search fresh produce, growers, markets...'}
         aria-label="Search products"
         autoFocus={autoFocus}
         aria-autocomplete="list"
         aria-expanded={!!showList}
         autoComplete="off"
       />
+      {SpeechRecognition && (
+        <button type="button" className={`mic-btn ${listening ? 'on' : ''}`} onClick={toggleVoice} aria-label={listening ? 'Stop voice search' : 'Search by voice'} aria-pressed={listening} title="Search by voice">
+          <IconMic width={18} height={18} />
+        </button>
+      )}
       <button aria-label="Search">Search</button>
       {showList && (
         <ul className="suggest" role="listbox">
