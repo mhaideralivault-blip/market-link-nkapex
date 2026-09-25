@@ -114,6 +114,7 @@ export const ordersApi = {
   cancel: (id) => api.post(`/orders/${id}/cancel`),
   reorder: (id) => api.get(`/orders/${id}/reorder`),
   setStatus: (id, status) => api.patch(`/orders/${id}/status`, { status }),
+  verifyPickup: (code) => api.post('/orders/verify-pickup', { code }),
 };
 
 export const adminApi = {

@@ -257,10 +257,28 @@ const updateStatus = async (req, res) => {
     throw new AppError(`Cannot change status from ${order.status} to ${status}`, 400);
   }
   if (status === 'declined') await releaseStock(order.items);
+  if (status === 'ready') order.pickupCode = Order.generatePickupCode();
   order.setStatus(status);
   await order.save();
   await notify(order.customer, `Order ${status}`, `Your order #${shortOrderId(order)} ${MESSAGES[status]}`, 'order', `/orders/${order._id}`);
-  res.json({ success: true, order });
+  const result = order.toObject();
+  delete result.pickupCode; // only the customer may see it
+  res.json({ success: true, order: result });
+};
+
+// POST /api/orders/verify-pickup { code }  (farmer) — the customer shows a QR/code, the farmer confirms the handover.
+const verifyPickup = async (req, res) => {
+  const code = cleanString(req.body.code).toUpperCase().replace(/^MLINK:/, '').replace(/[^A-Z0-9]/g, '');
+  if (code.length !== 6) throw new AppError('Enter the 6-character pickup code', 400);
+  const order = await Order.findOne({ farmer: req.user._id, status: 'ready', pickupCode: code }).select('+pickupCode');
+  if (!order) throw new AppError('No ready order matches this code. Check the code and that the order is marked ready.', 404);
+  order.setStatus('completed');
+  await order.save();
+  await notify(order.customer, 'Order completed', `Your order #${shortOrderId(order)} ${MESSAGES.completed}`, 'order', `/orders/${order._id}`);
+  await order.populate('customer', 'name phone');
+  const result = order.toObject();
+  delete result.pickupCode;
+  res.json({ success: true, order: result });
 };
 
 // ---------- shared ----------
@@ -289,6 +307,15 @@ const listOrders = async (req, res) => {
 
 const getOrder = async (req, res) => {
   const order = await loadOrderForUser(req.params.id, req.user);
+  // Only the customer who owns a ready order gets the pickup code (created lazily for orders that were ready before this feature).
+  if (req.user.role === 'customer' && order.status === 'ready') {
+    const withCode = await Order.findById(order._id).select('+pickupCode');
+    if (!withCode.pickupCode) {
+      withCode.pickupCode = Order.generatePickupCode();
+      await withCode.save();
+    }
+    order.pickupCode = withCode.pickupCode;
+  }
   await order.populate([
     { path: 'customer', select: 'name phone email' },
     { path: 'farmer', select: 'farmerProfile.stallName farmerProfile.location farmerProfile.operatingDays farmerProfile.pickupWindows farmerProfile.cutoffHours phone' },
@@ -297,4 +324,4 @@ const getOrder = async (req, res) => {
   res.json({ success: true, order });
 };
 
-module.exports = { placeOrder, modifyOrder, cancelOrder, reorder, updateStatus, listOrders, getOrder };
+module.exports = { placeOrder, modifyOrder, cancelOrder, reorder, updateStatus, verifyPickup, listOrders, getOrder };

@@ -4,6 +4,7 @@ import { ordersApi, errorMessage } from '../../services/api';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import ApprovalBanner from '../../components/ApprovalBanner';
+import PickupScanner from '../../components/PickupScanner';
 import { EmptyState, OrderStepper, PageHead, Pagination, StatusTag } from '../../components/Common';
 import { IconBasket } from '../../components/Icons';
 import { money } from '../../utils';
@@ -25,6 +26,7 @@ export default function Orders() {
   const [page, setPage] = useState(1);
   const [tick, setTick] = useState(0);
   const [busy, setBusy] = useState('');
+  const [scanning, setScanning] = useState(false);
   const { data, loading, error } = useFetch(() => ordersApi.list({ status, date, page, limit: 10 }), [status, date, page, tick]);
   const orders = data?.orders || [];
 
@@ -45,6 +47,9 @@ export default function Orders() {
   return (
     <>
       <PageHead kicker="Orders" title="Incoming orders" sub="Accept, prepare and hand over pre-orders. Customers are notified at every step.">
+        <button className="btn" onClick={() => setScanning(true)}>
+          Scan pickup QR
+        </button>
         <label className="inline">
           <span className="muted small">Pickup date</span>
           <input type="date" value={date} onChange={(event) => { setDate(event.target.value); setPage(1); }} />
@@ -112,6 +117,7 @@ export default function Orders() {
           </article>
         ))}
       </div>
+      {scanning && <PickupScanner onClose={() => setScanning(false)} onCompleted={() => { setScanning(false); setTick((previousTick) => previousTick + 1); }} />}
       {data && <Pagination page={data.page} pages={Math.ceil(data.total / 10)} onChange={setPage} />}
     </>
   );

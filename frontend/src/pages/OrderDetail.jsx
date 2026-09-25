@@ -7,6 +7,7 @@ import { OrderStepper, SlotPicker, Status, StatusTag } from '../components/Commo
 import { useConfirm } from '../context/ConfirmContext';
 import { useToast } from '../context/ToastContext';
 import ReviewSection from '../components/ReviewSection';
+import PickupQR from '../components/PickupQR';
 import { directionsLinks, money } from '../utils';
 
 const EDITABLE = ['placed', 'accepted'];
@@ -149,6 +150,7 @@ export default function OrderDetail() {
         <OrderStepper status={o.status} />
       </div>
       {msg.text && <p className={`alert alert-${msg.type}`}>{msg.text}</p>}
+      {o.status === 'ready' && o.pickupCode && !editing && <PickupQR code={o.pickupCode} />}
 
       {editing ? (
         <ModifyForm

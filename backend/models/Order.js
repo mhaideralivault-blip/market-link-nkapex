@@ -29,6 +29,9 @@ const orderSchema = new Schema(
     notes: { type: String, trim: true, maxlength: 500 },
     status: { type: String, enum: ORDER_STATUSES, default: 'placed', index: true },
     statusHistory: [{ _id: false, status: String, at: { type: Date, default: Date.now } }],
+    // Shown to the customer as a QR code once the order is ready; the farmer scans/enters it to hand over.
+    // Hidden by default so farmer/admin API responses never leak it.
+    pickupCode: { type: String, select: false },
   },
   { timestamps: true }
 );
@@ -37,6 +40,11 @@ orderSchema.methods.setStatus = function (status) {
   this.status = status;
   this.statusHistory.push({ status });
 };
+
+// 6 characters without look-alikes (no 0/O, 1/I/L) so it is easy to read out loud.
+const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+orderSchema.statics.generatePickupCode = () =>
+  Array.from(require('crypto').randomBytes(6), (byte) => CODE_ALPHABET[byte % CODE_ALPHABET.length]).join('');
 
 orderSchema.statics.STATUSES = ORDER_STATUSES;
 
