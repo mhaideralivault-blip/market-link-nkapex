@@ -27,6 +27,8 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 const FarmerDashboard = lazy(() => import('./pages/farmer/Dashboard'));
 const FarmerProducts = lazy(() => import('./pages/farmer/Products'));
 const FarmerOrders = lazy(() => import('./pages/farmer/Orders'));
+const FarmerHarvest = lazy(() => import('./pages/farmer/Harvest'));
+const HarvestCalendar = lazy(() => import('./pages/Harvest'));
 const FarmerReviews = lazy(() => import('./pages/farmer/Reviews'));
 const FarmerStall = lazy(() => import('./pages/farmer/Profile'));
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
@@ -61,6 +63,7 @@ export default function App() {
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/farmers/:id" element={<FarmerProfile />} />
+            <Route path="/harvest" element={<HarvestCalendar />} />
 
             {/* Customer */}
             <Route element={<ProtectedRoute roles={['customer']} />}>
@@ -80,6 +83,7 @@ export default function App() {
               <Route path="/farmer" element={<FarmerDashboard />} />
               <Route path="/farmer/products" element={<FarmerProducts />} />
               <Route path="/farmer/orders" element={<FarmerOrders />} />
+              <Route path="/farmer/harvest" element={<FarmerHarvest />} />
               <Route path="/farmer/reviews" element={<FarmerReviews />} />
               <Route path="/farmer/profile" element={<FarmerStall />} />
             </Route>

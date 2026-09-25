@@ -14,7 +14,9 @@
     "test:e2e": "node scripts/e2e-test.js",
     "test:load": "node scripts/load-test.js",
     "db:init": "node scripts/init-db.js",
-    "db:images": "node scripts/import-images.js"
+    "db:images": "node scripts/import-images.js",
+    "seed:harvest": "node scripts/seed-harvest.js",
+    "test:harvest": "node scripts/e2e-harvest.js"
   },
   "keywords": [],
   "author": "",

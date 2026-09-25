@@ -53,3 +53,5 @@ export const IconSprout = make(<><path d="M12 21v-8" /><path d="M12 13c0-4-3-6-7
 export const IconTagPrice = make(<><path d="M3 12V4h8l10 10-8 8L3 12z" /><circle cx="7.5" cy="8.5" r="1.3" /></>);
 export const IconChevronLeft = make(<path d="m14.5 5.5-6.5 6.5 6.5 6.5" />);
 export const IconChevronRight = make(<path d="m9.5 5.5 6.5 6.5-6.5 6.5" />);
+
+export const IconCalendar = make(<><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" /><path d="M3.5 10h17" /><path d="M8 3v4" /><path d="M16 3v4" /></>);

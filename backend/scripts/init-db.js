@@ -3,7 +3,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const connectDB = require('../config/db');
-const models = ['User', 'Market', 'Category', 'Product', 'Order', 'Review', 'Notification', 'Announcement', 'Report'].map((n) =>
+const models = ['User', 'Market', 'Category', 'Product', 'Order', 'Review', 'Notification', 'Announcement', 'Report', 'Harvest'].map((n) =>
   require(`../models/${n}`)
 );
 

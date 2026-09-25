@@ -117,6 +117,16 @@ export const ordersApi = {
   verifyPickup: (code) => api.post('/orders/verify-pickup', { code }),
 };
 
+export const harvestsApi = {
+  upcoming: (params) => api.get('/harvests', { params: qs(params) }),
+  subscribe: (id) => api.post(`/harvests/${id}/subscribe`),
+  unsubscribe: (id) => api.delete(`/harvests/${id}/subscribe`),
+  mine: () => api.get('/harvests/mine'),
+  create: (data) => api.post('/harvests', data),
+  update: (id, data) => api.put(`/harvests/${id}`, data),
+  setStatus: (id, status) => api.patch(`/harvests/${id}/status`, { status }),
+};
+
 export const adminApi = {
   dashboard: () => api.get('/admin/dashboard'),
   users: (params) => api.get('/admin/users', { params: qs(params) }),

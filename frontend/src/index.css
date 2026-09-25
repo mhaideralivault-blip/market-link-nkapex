@@ -1521,3 +1521,34 @@ input:focus, select:focus, textarea:focus { border-color: var(--green-700); box-
 @keyframes mic-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(217,74,58,.5); } 50% { box-shadow: 0 0 0 8px rgba(217,74,58,0); } }
 .ss-top .header-search button.mic-btn { display: inline-flex; }
 @media (prefers-reduced-motion: reduce) { .header-search button.mic-btn.on { animation: none; } }
+
+/* ---- Harvest calendar ---- */
+.hv-layout { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 24px; align-items: start; }
+.hv-cal { position: sticky; top: 90px; padding: 18px; }
+.hv-cal-head { margin-bottom: 10px; }
+.hv-cal-head h2 { font-size: 1.25rem; margin: 0; }
+.hv-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.hv-wd { font-size: .72rem; font-weight: 700; color: var(--muted); padding: 4px 0; text-transform: uppercase; letter-spacing: .04em; }
+.hv-day { position: relative; aspect-ratio: 1; border: 0; border-radius: 12px; background: transparent; color: var(--muted); font: inherit; font-size: .92rem; cursor: default; }
+.hv-day.has { background: var(--green-100); color: var(--green-900); font-weight: 700; cursor: pointer; }
+.hv-day.has:hover { background: #cfe3c6; }
+.hv-day.today { outline: 2px solid var(--sun); outline-offset: -2px; }
+.hv-day.sel { background: var(--green-900); color: #fff; }
+.hv-day i { position: absolute; top: 2px; right: 3px; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 99px; background: var(--orange); color: #fff; font-style: normal; font-size: .62rem; line-height: 15px; font-weight: 700; }
+.hv-group { font-size: 1.05rem; margin: 22px 0 10px; color: var(--green-900); }
+.hv-list section:first-child .hv-group { margin-top: 0; }
+.hv-card { display: flex; gap: 16px; padding: 18px; }
+.hv-date { flex: none; width: 62px; height: 70px; border-radius: 16px; background: var(--green-900); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.05; }
+.hv-date b { font-size: 1.7rem; font-family: var(--font-display, inherit); }
+.hv-date span { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--sun); }
+.hv-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.hv-body h3 { margin: 0; font-size: 1.2rem; }
+.hv-body p { margin: 0; }
+.hv-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+.hv-foot .btn svg { margin-right: 6px; vertical-align: -3px; }
+.hv-mine { padding: 16px 18px; border-left: 5px solid var(--sun); }
+.hv-mine.s-available { border-left-color: var(--green-600); } .hv-mine.s-cancelled { border-left-color: var(--orange); opacity: .8; }
+.hv-mine-foot { margin-top: 12px; gap: 10px; flex-wrap: wrap; }
+.notif-ico.t-harvest { background: #fff2d6; }
+@media (max-width: 860px) { .hv-layout { grid-template-columns: 1fr; } .hv-cal { position: static; } }
+@media (max-width: 480px) { .hv-card { padding: 14px; gap: 12px; } .hv-date { width: 54px; height: 62px; } }

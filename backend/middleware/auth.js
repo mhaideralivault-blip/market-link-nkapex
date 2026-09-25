@@ -21,6 +21,21 @@ const protect = async (req, res, next) => {
   next();
 };
 
+// For public routes that personalise the response when a valid token is sent (never rejects).
+const optionalAuth = async (req, res, next) => {
+  const header = req.headers.authorization;
+  if (header?.startsWith('Bearer ')) {
+    try {
+      const decoded = jwt.verify(header.slice(7), process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id);
+      if (user?.isActive) req.user = user;
+    } catch {
+      /* invalid token: treat as a guest */
+    }
+  }
+  next();
+};
+
 const authorize =
   (...roles) =>
   (req, res, next) => {
@@ -36,4 +51,4 @@ const approvedFarmer = (req, res, next) => {
   next();
 };
 
-module.exports = { protect, authorize, approvedFarmer };
+module.exports = { protect, optionalAuth, authorize, approvedFarmer };

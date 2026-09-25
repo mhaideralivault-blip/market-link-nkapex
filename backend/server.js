@@ -49,6 +49,7 @@ app.use('/api/categories', publicCache(60), require('./routes/categories'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/farmers', require('./routes/farmers'));
 app.use('/api/orders', heavyLimiter, require('./routes/orders'));
+app.use('/api/harvests', require('./routes/harvests'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/customer', require('./routes/customer'));
 app.use('/api/notifications', require('./routes/notifications'));
