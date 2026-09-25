@@ -37,7 +37,12 @@ export const errorMessage = (err) =>
   err.response?.data?.message || (err.request ? 'Cannot reach the server. Is the backend running?' : err.message);
 
 // Product/market images are stored as "/uploads/x.jpg" on the backend.
-export const imageUrl = (path) => (!path ? null : path.startsWith('http') ? path : `${API_ORIGIN}${path}`);
+// Pass a width (160/320/480/640/960) to get a smaller WebP version from the server.
+export const imageUrl = (path, width) => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  return `${API_ORIGIN}${path}${width && path.startsWith('/uploads/') ? `?w=${width}` : ''}`;
+};
 
 export const authApi = {
   login: (data) => api.post('/auth/login', data),
@@ -104,6 +109,16 @@ export const favoritesApi = {
   list: () => api.get('/customer/favorites'),
   add: (type, id) => api.put(`/customer/favorites/${type}/${id}`),
   remove: (type, id) => api.delete(`/customer/favorites/${type}/${id}`),
+};
+
+export const familyApi = {
+  get: () => api.get('/family'),
+  favorites: () => api.get('/family/favorites'),
+  invite: (email) => api.post('/family/invite', { email }),
+  accept: (from) => api.post(`/family/invites/${from}/accept`),
+  decline: (from) => api.post(`/family/invites/${from}/decline`),
+  leave: () => api.post('/family/leave'),
+  removeMember: (id) => api.delete(`/family/members/${id}`),
 };
 
 export const ordersApi = {

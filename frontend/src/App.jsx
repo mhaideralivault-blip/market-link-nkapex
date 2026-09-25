@@ -23,6 +23,7 @@ const Cart = lazy(() => import('./pages/Cart'));
 const Orders = lazy(() => import('./pages/Orders'));
 const OrderDetail = lazy(() => import('./pages/OrderDetail'));
 const Favorites = lazy(() => import('./pages/Favorites'));
+const Family = lazy(() => import('./pages/Family'));
 const Notifications = lazy(() => import('./pages/Notifications'));
 const FarmerDashboard = lazy(() => import('./pages/farmer/Dashboard'));
 const FarmerProducts = lazy(() => import('./pages/farmer/Products'));
@@ -71,6 +72,7 @@ export default function App() {
               <Route path="/orders" element={<Orders />} />
               <Route path="/orders/:id" element={<OrderDetail />} />
               <Route path="/favorites" element={<Favorites />} />
+              <Route path="/family" element={<Family />} />
             </Route>
 
             {/* Any logged-in user */}

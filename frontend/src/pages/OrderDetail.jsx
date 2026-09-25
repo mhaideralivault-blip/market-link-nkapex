@@ -105,7 +105,8 @@ export default function OrderDetail() {
 
   const o = data.order;
   const fp = o.farmer.farmerProfile;
-  const editable = EDITABLE.includes(o.status);
+  const familyView = !!o.familyView;
+  const editable = EDITABLE.includes(o.status) && !familyView;
 
   const cancel = async () => {
     if (!(await confirm({ title: 'Cancel this order?', message: 'The reserved stock goes back to the farmer. You can reorder later.', confirmText: 'Cancel order', danger: true }))) return;
@@ -146,6 +147,7 @@ export default function OrderDetail() {
         <h1>Order #{o._id.slice(-6).toUpperCase()}</h1>
         <StatusTag status={o.status} />
       </div>
+      {familyView && <p className="alert alert-info">Placed by {o.customer?.name} (family account). You can view it and reorder, but only they can change it.</p>}
       <div className="ad-card" style={{ margin: '4px 0 20px' }}>
         <OrderStepper status={o.status} />
       </div>
@@ -225,7 +227,7 @@ export default function OrderDetail() {
         </div>
       )}
 
-      {o.status === 'completed' && !editing && <ReviewSection order={o} />}
+      {o.status === 'completed' && !editing && !familyView && <ReviewSection order={o} />}
 
       <h2 className="section-title">Status history</h2>
       <ol className="timeline">

@@ -49,6 +49,11 @@ const userSchema = new Schema(
     role: { type: String, enum: ['customer', 'farmer', 'admin'], default: 'customer' },
     isActive: { type: Boolean, default: true },
     farmerProfile: farmerProfileSchema,
+    // Family sharing: `group` is the owner's user id once the customer belongs to a family group.
+    family: {
+      group: { type: Schema.Types.ObjectId, ref: 'User' },
+      invites: [{ _id: false, from: { type: Schema.Types.ObjectId, ref: 'User' }, fromName: String, at: { type: Date, default: Date.now } }],
+    },
     favorites: {
       farmers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
       products: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
@@ -62,6 +67,7 @@ userSchema.index({ 'farmerProfile.geo': '2dsphere' });
 userSchema.index({ role: 1, 'farmerProfile.approvalStatus': 1 });
 userSchema.index({ role: 1, createdAt: -1 }); // admin user lists (paged, newest first)
 userSchema.index({ role: 1, isActive: 1 });
+userSchema.index({ 'family.group': 1 }, { sparse: true });
 
 userSchema.index({ 'farmerProfile.slug': 1 }, { unique: true, sparse: true });
 

@@ -36,6 +36,7 @@ const LINKS = {
     ['/harvest', 'Harvest'],
     ['/orders', 'My Orders'],
     ['/favorites', 'Favorites'],
+    ['/family', 'Family'],
     ['/notifications', 'Alerts'],
     ['/about', 'About'],
     ['/contact', 'Contact'],
@@ -60,7 +61,7 @@ const LINKS = {
   ],
 };
 
-const DESKTOP_HIDE = ['/favorites', '/notifications', '/about', '/contact'];
+const DESKTOP_HIDE = ['/favorites', '/family', '/notifications', '/about', '/contact'];
 
 const RECENT_KEY = 'marketlink_recent_searches';
 const readRecent = () => {
@@ -719,6 +720,7 @@ function Footer() {
             <li><Link to="/login">Farmer login</Link></li>
             {user?.role === 'customer' && <li><Link to="/orders">My orders</Link></li>}
             {user?.role === 'customer' && <li><Link to="/favorites">Favorites</Link></li>}
+            {user?.role === 'customer' && <li><Link to="/family">Family account</Link></li>}
           </ul>
         </div>
         <div>
@@ -729,9 +731,7 @@ function Footer() {
           </ul>
         </div>
       </div>
-      <div className="foot-mark" aria-hidden>
-        MarketLink
-      </div>
+      <div className="foot-mark" aria-hidden />
       <div className="footer-bottom-wrap">
         <div className="container footer-bottom">
           <span className="fb-copy">© {new Date().getFullYear()} MarketLink. Pickup only, no delivery. Payment is made in person.</span>

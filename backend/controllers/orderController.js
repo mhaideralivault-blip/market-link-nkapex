@@ -85,13 +85,17 @@ const calculateTotal = (items) =>
 // Short readable order number shown to users, e.g. "a3f9c2".
 const shortOrderId = (order) => order._id.toString().slice(-6);
 
-const loadOrderForUser = async (id, user) => {
+// `allowFamily` lets a customer read (never change) orders placed by members of their family group.
+const loadOrderForUser = async (id, user, { allowFamily = false } = {}) => {
   const order = await Order.findById(id);
   if (!order) throw new AppError('Order not found', 404);
-  const canView =
+  let canView =
     user.role === 'admin' ||
     (user.role === 'customer' && order.customer.equals(user._id)) ||
     (user.role === 'farmer' && order.farmer.equals(user._id));
+  if (!canView && allowFamily && user.role === 'customer' && user.family?.group) {
+    canView = !!(await User.exists({ _id: order.customer, 'family.group': user.family.group }));
+  }
   if (!canView) throw new AppError('Order not found', 404);
   return order;
 };
@@ -216,7 +220,7 @@ const cancelOrder = async (req, res) => {
 
 // GET /api/orders/:id/reorder — current availability of a past order's items, ready to add to a cart.
 const reorder = async (req, res) => {
-  const order = await loadOrderForUser(req.params.id, req.user);
+  const order = await loadOrderForUser(req.params.id, req.user, { allowFamily: true });
   const products = await Product.find({ _id: { $in: order.items.map((item) => item.product) }, isActive: true });
   const items = order.items.map((item) => {
     const product = products.find((candidate) => candidate._id.equals(item.product));
@@ -296,7 +300,14 @@ const verifyPickup = async (req, res) => {
 // Customer: own orders; farmer: received orders; admin: all.
 const listOrders = async (req, res) => {
   const filter = {};
-  if (req.user.role === 'customer') filter.customer = req.user._id;
+  if (req.user.role === 'customer') {
+    filter.customer = req.user._id;
+    // ?family=1: orders of the other members of the customer's family group (read-only).
+    if (req.query.family === '1' && req.user.family?.group) {
+      const members = await User.find({ 'family.group': req.user.family.group }).distinct('_id');
+      filter.customer = { $in: members };
+    }
+  }
   if (req.user.role === 'farmer') filter.farmer = req.user._id;
   if (cleanString(req.query.status) && Order.STATUSES.includes(req.query.status)) filter.status = req.query.status;
   if (cleanString(req.query.date)) filter.pickupDate = cleanString(req.query.date);
@@ -316,9 +327,10 @@ const listOrders = async (req, res) => {
 };
 
 const getOrder = async (req, res) => {
-  const order = await loadOrderForUser(req.params.id, req.user);
+  const order = await loadOrderForUser(req.params.id, req.user, { allowFamily: true });
+  const isOwner = req.user.role !== 'customer' || order.customer.equals(req.user._id);
   // Only the customer who owns a ready order gets the pickup code (created lazily for orders that were ready before this feature).
-  if (req.user.role === 'customer' && order.status === 'ready') {
+  if (req.user.role === 'customer' && isOwner && order.status === 'ready') {
     const withCode = await Order.findById(order._id).select('+pickupCode');
     if (!withCode.pickupCode) {
       withCode.pickupCode = Order.generatePickupCode();
@@ -331,7 +343,7 @@ const getOrder = async (req, res) => {
     { path: 'farmer', select: 'farmerProfile.stallName farmerProfile.location farmerProfile.operatingDays farmerProfile.pickupWindows farmerProfile.cutoffHours phone' },
     { path: 'market', select: 'name address latitude longitude mapLink' },
   ]);
-  res.json({ success: true, order });
+  res.json({ success: true, order: isOwner ? order : { ...order.toJSON(), familyView: true } });
 };
 
 module.exports = { placeOrder, modifyOrder, cancelOrder, reorder, updateStatus, verifyPickup, listOrders, getOrder };

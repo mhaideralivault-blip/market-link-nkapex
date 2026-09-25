@@ -72,7 +72,7 @@ npm run build      # production build in frontend/dist
 ## Features
 - **Customer:** register and log in, browse markets and farmers on a map (with directions), search and filter
   products (category, price, market, day), cart and pre-order with a pickup date and slot, view / modify / cancel
-  orders before the cut-off, reorder, favorites with restock alerts, reviews and ratings, in-app notifications,
+  orders before the cut-off, reorder, family account sharing (invite members, shared orders and favorites), favorites with restock alerts, reviews and ratings, in-app notifications,
   and a chatbot assistant.
 - **Farmer:** stall profile (markets, operating days, pickup windows, cut-off, map pin), product management with
   images, sold-out / hide controls and a weekly stock template, accept / decline / ready / complete orders,
@@ -95,6 +95,7 @@ Send `Authorization: Bearer <token>` for protected routes.
 | Orders | `POST /orders`, `GET /orders`, `GET /orders/:id`, `PUT /orders/:id`, `POST /orders/:id/cancel`, `GET /orders/:id/reorder`; farmer: `PATCH /orders/:id/status` |
 | Reviews | `GET /reviews?farmer=` or `?product=`, `GET /reviews/order/:orderId`, `POST /reviews`, `PUT /reviews/:id/reply`, `DELETE /reviews/:id` |
 | Customer | `GET /customer/favorites`, `PUT/DELETE /customer/favorites/:type/:id` |
+| Family | `GET /family`, `GET /family/favorites`, `POST /family/invite`, `POST /family/invites/:from/accept\|decline`, `POST /family/leave`, `DELETE /family/members/:id`; `GET /orders?family=1` |
 | Notifications | `GET /notifications`, `PATCH /notifications/read-all`, `PATCH /notifications/:id/read`, `GET /notifications/announcements` |
 | Admin | `GET /admin/dashboard`, `/admin/users`, `/admin/reviews`; `PATCH /admin/farmers/:id/status`, `/admin/users/:id/active`; `GET/POST /admin/reports`; `POST/DELETE /admin/announcements` |
 | Other | `POST /chatbot`, `POST /uploads/image` |
@@ -115,7 +116,7 @@ Send `Authorization: Bearer <token>` for protected routes.
   OpenStreetMap or Google Maps.
 - Notifications are in-app; e-mail notifications are not sent.
 - The chatbot is rule-based (keyword matching over live data), not a machine-learning model.
-- Optional family account sharing is not implemented.
+- Family account sharing is an invite-based group (up to 6 customers, each with their own login): members see each other's orders and favorites and can reorder, but only the person who placed an order can modify or cancel it.
 - Uploaded product images are stored in MongoDB (`images` collection) and served from `/uploads/<path>`, so no persistent disk is needed. Max 2 MB each (JPG, PNG, WEBP).
 
 ## Hosting notes
