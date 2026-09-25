@@ -271,7 +271,17 @@ const verifyPickup = async (req, res) => {
   const code = cleanString(req.body.code).toUpperCase().replace(/^MLINK:/, '').replace(/[^A-Z0-9]/g, '');
   if (code.length !== 6) throw new AppError('Enter the 6-character pickup code', 400);
   const order = await Order.findOne({ farmer: req.user._id, status: 'ready', pickupCode: code }).select('+pickupCode');
-  if (!order) throw new AppError('No ready order matches this code. Check the code and that the order is marked ready.', 404);
+  if (!order) {
+    // Explain *why* it failed: the code may belong to an order this farmer already handed over.
+    const known = await Order.findOne({ farmer: req.user._id, pickupCode: code }).select('status statusHistory');
+    if (known?.status === 'completed') {
+      const doneAt = known.statusHistory.find((entry) => entry.status === 'completed')?.at;
+      const when = doneAt ? ` on ${new Date(doneAt).toLocaleString('en-GB', { timeZone: 'Asia/Karachi', dateStyle: 'medium', timeStyle: 'short' })}` : '';
+      throw new AppError(`Order #${shortOrderId(known)} was already completed${when}. This code has already been used.`, 409);
+    }
+    if (known) throw new AppError(`Order #${shortOrderId(known)} is ${known.status}, not ready for pickup.`, 409);
+    throw new AppError('Invalid code. No order at your stall matches it. Check the code and try again.', 404);
+  }
   order.setStatus('completed');
   await order.save();
   await notify(order.customer, 'Order completed', `Your order #${shortOrderId(order)} ${MESSAGES.completed}`, 'order', `/orders/${order._id}`);
