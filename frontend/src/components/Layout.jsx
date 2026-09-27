@@ -384,6 +384,15 @@ function Navbar() {
   const hoverTimer = useRef(null);
   const headerRef = useRef(null);
   const [backTop, setBackTop] = useState(0);
+  const isHome = pathname === '/';
+  const [atHeroTop, setAtHeroTop] = useState(isHome);
+  useEffect(() => {
+    if (!isHome) return undefined;
+    const onScroll = () => setAtHeroTop(window.scrollY < window.innerHeight * 0.72);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [isHome]);
   const openMega = () => {
     clearTimeout(hoverTimer.current);
     hoverTimer.current = setTimeout(() => {
@@ -427,7 +436,7 @@ function Navbar() {
 
   return (
     <>
-      <header className="site-header" ref={headerRef}>
+      <header className={`site-header ${isHome && atHeroTop ? 'hdr-on-hero' : ''}`} ref={headerRef}>
         <div className="topbar">
           <div className="container topbar-inner">
             <span>Fresh from local growers · Pickup at the market · Pay in person</span>

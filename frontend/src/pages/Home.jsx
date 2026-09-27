@@ -21,72 +21,42 @@ const fmtTime = (t) => {
 const hours = (m) => (m.openTime && m.closeTime ? `${fmtTime(m.openTime)} – ${fmtTime(m.closeTime)}` : '');
 const todayName = () => DAYS[(new Date().getDay() + 6) % 7];
 
-function Hero({ markets, stats }) {
+function Hero() {
   const { user } = useAuth();
-  const today = todayName();
-  const live = [...markets].sort((first, second) => Number(second.operatingDays.includes(today)) - Number(first.operatingDays.includes(today))).slice(0, 3);
-  const openWeek = markets.filter((market) => nextOpenLabel(market.operatingDays)).length;
   return (
-    <section className="hero">
+    <section className="hero hero-cinematic">
       <div className="hero-bg" aria-hidden />
-      <div className="hero-inner">
-        <div className="hero-copy">
-          <span className="kicker">Farmers markets, reimagined</span>
-          <h1>
-            Meet the hands that <em>grow</em> your food.
-          </h1>
-          <p>Reserve fresh produce straight from local growers, then pick it up at the market on the day. Real stock, real people, zero sold-out surprises.</p>
-          <div className="row-gap">
-            {user ? (
-              <Link className="btn btn-xl btn-tomato" to={homeFor(user)}>
-                Go to my dashboard
-              </Link>
-            ) : (
-              <>
-                <Link className="btn btn-xl btn-tomato" to="/products">
-                  Shop the harvest <span aria-hidden>→</span>
-                </Link>
-                <Link className="btn btn-xl btn-glass" to="/register?role=farmer">
-                  Sell as a grower
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-
-        <aside className="hero-panel" aria-label="Market days">
-          <div className="panel-head">
-            <span className="live-dot" aria-hidden /> Market days
-          </div>
-          {live.map((m) => (
-            <Link key={m._id} to={marketPath(m)} className="panel-row">
-              <span>
-                <strong>{m.name}</strong>
-                <small>{hours(m) || daysText(m.operatingDays)}</small>
-              </span>
-              <span className={`pill-open ${m.operatingDays.includes(today) ? 'on' : ''}`}>{nextOpenLabel(m.operatingDays)}</span>
+      <div className="hero-copy">
+        <span className="kicker">From our farms to your table</span>
+        <h1>
+          Freshness
+          <br />
+          in <em>every</em> step.
+        </h1>
+        <p>We connect local farmers with you — bringing fresh, seasonal produce from our fields to your home.</p>
+        <div className="row-gap">
+          {user ? (
+            <Link className="btn btn-xl btn-glass" to={homeFor(user)}>
+              Go to my dashboard <span aria-hidden>→</span>
             </Link>
-          ))}
-          <Link to="/markets" className="panel-all">
-            All {stats.markets} markets →
-          </Link>
-        </aside>
+          ) : (
+            <Link className="btn btn-xl btn-glass" to="/products">
+              Shop the harvest <span aria-hidden>→</span>
+            </Link>
+          )}
+        </div>
       </div>
-
-      <ul className="hero-stats">
-        <li>
-          <strong>{stats.products}</strong> fresh products
-        </li>
-        <li>
-          <strong>{stats.farmers}</strong> local growers
-        </li>
-        <li>
-          <strong>{stats.markets}</strong> weekly markets
-        </li>
-        <li>
-          <strong>{openWeek}</strong> open in the next 7 days
-        </li>
-      </ul>
+      <span className="hero-mark" aria-hidden>
+        Real Farmers
+        <br />
+        Real Food
+        <br />
+        Real People
+      </span>
+      <div className="hero-scroll" aria-hidden>
+        <span className="hero-scroll-dot" />
+        <small>Scroll to explore</small>
+      </div>
     </section>
   );
 }
@@ -437,7 +407,6 @@ export default function Home() {
   const d = home.data;
   const categories = d?.categories || [];
   const marketList = d?.markets || [];
-  const stats = d?.stats || { markets: 0, farmers: 0, products: 0 };
 
   return (
     <div className="home">
@@ -446,7 +415,7 @@ export default function Home() {
           We could not load the latest harvest. Check your connection and <button onClick={() => window.location.reload()}>try again</button>.
         </p>
       )}
-      <Hero markets={marketList} stats={stats} />
+      <Hero />
       <Marquee categories={categories} />
       <Features />
       <CategoryBento tiles={d?.categoryTiles || []} loading={home.loading} />
