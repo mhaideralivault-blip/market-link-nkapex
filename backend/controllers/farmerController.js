@@ -80,7 +80,7 @@ const dashboard = async (req, res) => {
   const farmer = req.user._id;
   const fourteenDaysAgo = new Date(Date.now() - 13 * DAY_MS);
   fourteenDaysAgo.setUTCHours(0, 0, 0, 0);
-  const [statusCounts, revenueTotals, bestSelling, recent, dailyStats, upcomingOrders, lowStock] = await Promise.all([
+  const [statusCounts, revenueTotals, bestSelling, recent, dailyStats, upcomingOrders, lowStock, staleWeeklyStock] = await Promise.all([
     Order.aggregate([{ $match: { farmer } }, { $group: { _id: '$status', count: { $sum: 1 } } }]),
     Order.aggregate([
       { $match: { farmer, status: 'completed' } },
@@ -112,6 +112,12 @@ const dashboard = async (req, res) => {
       .populate('customer', 'name phone')
       .lean(),
     Product.find({ farmer, isActive: true, available: true, quantityAvailable: { $lte: 5 } }).sort('quantityAvailable').limit(8).select('name unit quantityAvailable').lean(),
+    Product.find({
+      farmer,
+      isActive: true,
+      'weeklyTemplate.enabled': true,
+      $or: [{ 'weeklyTemplate.appliedAt': null }, { 'weeklyTemplate.appliedAt': { $lt: new Date(Date.now() - 7 * DAY_MS) } }],
+    }).select('name weeklyTemplate.appliedAt').lean(),
   ]);
 
   // Market-day pick list: group open orders by pickup date and add up the quantity of every product to pack.
@@ -159,6 +165,7 @@ const dashboard = async (req, res) => {
       days,
       pickList,
       lowStock,
+      staleWeeklyStock,
     },
   });
 };

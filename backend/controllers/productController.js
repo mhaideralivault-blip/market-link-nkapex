@@ -128,13 +128,14 @@ const pickFields = (body) => {
   if (Array.isArray(body.tags)) fields.tags = [...new Set(body.tags.filter((tag) => Product.TAGS.includes(tag)))];
   if (body.price !== undefined) fields.price = Number(body.price);
   if (body.quantityAvailable !== undefined) fields.quantityAvailable = Number(body.quantityAvailable);
-  if (body.weeklyTemplate && typeof body.weeklyTemplate === 'object') {
-    fields.weeklyTemplate = {
-      enabled: !!body.weeklyTemplate.enabled,
-      quantity: Number(body.weeklyTemplate.quantity) || 0,
-    };
-  }
   return fields;
+};
+
+// Applies only the enabled/quantity keys so an edit never wipes the stored `appliedAt`.
+const applyTemplateFields = (product, weeklyTemplate) => {
+  if (!weeklyTemplate || typeof weeklyTemplate !== 'object') return;
+  product.weeklyTemplate.enabled = !!weeklyTemplate.enabled;
+  product.weeklyTemplate.quantity = Number(weeklyTemplate.quantity) || 0;
 };
 
 const createProduct = async (req, res) => {
@@ -142,7 +143,9 @@ const createProduct = async (req, res) => {
   if (!(await Category.exists({ _id: req.body.category, isActive: true }))) {
     throw new AppError('Invalid category', 400);
   }
-  const product = await Product.create({ ...pickFields(req.body), farmer: req.user._id });
+  const product = new Product({ ...pickFields(req.body), farmer: req.user._id });
+  applyTemplateFields(product, req.body.weeklyTemplate);
+  await product.save();
   res.status(201).json({ success: true, product });
 };
 
@@ -162,6 +165,7 @@ const updateProduct = async (req, res) => {
     throw new AppError('Invalid category', 400);
   }
   product.set(fields);
+  applyTemplateFields(product, req.body.weeklyTemplate);
   await product.save();
   if (wasSoldOut && product.quantityAvailable > 0 && product.available) await notifyRestock(product);
   res.json({ success: true, product });
@@ -179,17 +183,54 @@ const setProductStatus = async (req, res) => {
   res.json({ success: true, product });
 };
 
+// Resets one product's stock from its own weekly template and stamps when it happened.
+const applyOne = async (product) => {
+  const wasSoldOut = product.quantityAvailable <= 0;
+  product.quantityAvailable = product.weeklyTemplate.quantity;
+  product.available = true;
+  product.weeklyTemplate.appliedAt = new Date();
+  await product.save();
+  if (wasSoldOut && product.quantityAvailable > 0) await notifyRestock(product);
+};
+
 // Reset stock of every product with an enabled weekly template.
 const applyWeeklyTemplate = async (req, res) => {
   const products = await Product.find({ farmer: req.user._id, 'weeklyTemplate.enabled': true });
-  for (const product of products) {
-    const wasSoldOut = product.quantityAvailable <= 0;
-    product.quantityAvailable = product.weeklyTemplate.quantity;
-    product.available = true;
-    await product.save();
-    if (wasSoldOut && product.quantityAvailable > 0) await notifyRestock(product);
-  }
+  for (const product of products) await applyOne(product);
   res.json({ success: true, updated: products.length, products });
+};
+
+// Reset a single product's stock from its own weekly template.
+const applyProductTemplate = async (req, res) => {
+  const product = await ownProduct(req.params.id, req.user);
+  if (!product.weeklyTemplate.enabled) throw new AppError('This product has no weekly template enabled', 400);
+  await applyOne(product);
+  res.json({ success: true, product });
+};
+
+// Bulk-edit the weekly template (enabled + quantity) for several of the farmer's own products at once.
+const bulkUpdateTemplates = async (req, res) => {
+  const items = Array.isArray(req.body.items) ? req.body.items : [];
+  if (!items.length) throw new AppError('No items to update', 400);
+  const ids = items.map((item) => item.id);
+  const products = await Product.find({ _id: { $in: ids }, farmer: req.user._id });
+  const byId = new Map(products.map((product) => [String(product._id), product]));
+  const updated = [];
+  for (const item of items) {
+    const product = byId.get(String(item.id));
+    if (!product) continue;
+    applyTemplateFields(product, { enabled: item.enabled, quantity: item.quantity });
+    await product.save();
+    updated.push(product);
+  }
+  res.json({ success: true, updated: updated.length, products: updated });
+};
+
+// Weekly auto-refresh across every farmer (called by a scheduled Vercel Cron job; see routes/cron.js).
+const applyAllWeeklyTemplates = async () => {
+  const products = await Product.find({ 'weeklyTemplate.enabled': true });
+  for (const product of products) await applyOne(product);
+  return products.length;
 };
 
 // Farmer deletes own; admin may delete any (content moderation).
@@ -223,6 +264,9 @@ module.exports = {
   updateProduct,
   setProductStatus,
   applyWeeklyTemplate,
+  applyProductTemplate,
+  bulkUpdateTemplates,
+  applyAllWeeklyTemplates,
   deleteProduct,
   adminListProducts,
 };

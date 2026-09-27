@@ -4,7 +4,8 @@ import { categoriesApi, productsApi, uploadImage, errorMessage, imageUrl } from 
 import ApprovalBanner from '../../components/ApprovalBanner';
 import { PageHead, Status } from '../../components/Common';
 import { useConfirm } from '../../context/ConfirmContext';
-import { money, TAGS } from '../../utils';
+import { useToast } from '../../context/ToastContext';
+import { money, TAGS, timeAgo } from '../../utils';
 
 const todayInput = () => new Date().toISOString().slice(0, 10);
 
@@ -163,6 +164,126 @@ function ProductForm({ initial, categories, onSaved, onCancel, id }) {
 
 const STATUS_TAG = { available: ['tag', 'In stock'], sold_out: ['tag tag-warn', 'Sold out'], unavailable: ['tag tag-cancelled', 'Unavailable'] };
 
+const STALE_DAYS = 7;
+const daysSince = (date) => (date ? (Date.now() - new Date(date).getTime()) / 86_400_000 : Infinity);
+
+// Bulk-edit table: flip a product's weekly template on/off and set its quantity without opening the full edit form,
+// see each one's last-applied date at a glance, and refresh a single product's stock on the spot.
+function WeeklyStock({ products, onChanged }) {
+  const toast = useToast();
+  const [rows, setRows] = useState(() => products.map((p) => ({ id: p._id, enabled: !!p.weeklyTemplate?.enabled, quantity: p.weeklyTemplate?.quantity ?? 0 })));
+  const [applying, setApplying] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const byId = Object.fromEntries(products.map((p) => [p._id, p]));
+
+  const setRow = (id, patch) => setRows((current) => current.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+
+  const dirty = rows.some((row) => {
+    const p = byId[row.id];
+    return !!p.weeklyTemplate?.enabled !== row.enabled || (p.weeklyTemplate?.quantity ?? 0) !== Number(row.quantity || 0);
+  });
+
+  const save = async () => {
+    setError('');
+    setSaving(true);
+    try {
+      const items = rows
+        .filter((row) => {
+          const p = byId[row.id];
+          return !!p.weeklyTemplate?.enabled !== row.enabled || (p.weeklyTemplate?.quantity ?? 0) !== Number(row.quantity || 0);
+        })
+        .map((row) => ({ id: row.id, enabled: row.enabled, quantity: Number(row.quantity) || 0 }));
+      await productsApi.bulkUpdateTemplates(items);
+      toast('Weekly stock template updated.');
+      onChanged();
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const applyNow = async (id) => {
+    setError('');
+    setApplying(id);
+    try {
+      await productsApi.applyTemplateOne(id);
+      toast('Stock refreshed from the weekly template.');
+      onChanged();
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setApplying(null);
+    }
+  };
+
+  if (!products.length) return null;
+
+  return (
+    <div className="card stack mb weekly-stock">
+      <div className="between">
+        <div>
+          <h2>Weekly stock</h2>
+          <p className="muted small">Turn on a weekly template and set the quantity to restock automatically every Monday, or refresh a single product any time.</p>
+        </div>
+      </div>
+      <div className="table-wrap">
+        <table className="table ad-table weekly-stock-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Current stock</th>
+              <th>Weekly template</th>
+              <th>Weekly quantity</th>
+              <th>Last applied</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const p = byId[row.id];
+              const stale = row.enabled && daysSince(p.weeklyTemplate?.appliedAt) > STALE_DAYS;
+              return (
+                <tr key={row.id}>
+                  <td data-label="Product">{p.name}</td>
+                  <td data-label="Current stock">{p.quantityAvailable} {p.unit}</td>
+                  <td data-label="Weekly template">
+                    <label className="check">
+                      <input type="checkbox" checked={row.enabled} onChange={(event) => setRow(row.id, { enabled: event.target.checked })} /> Enabled
+                    </label>
+                  </td>
+                  <td data-label="Weekly quantity">
+                    <input className="qty" type="number" min="0" disabled={!row.enabled} value={row.quantity} onChange={(event) => setRow(row.id, { quantity: event.target.value })} />
+                  </td>
+                  <td data-label="Last applied">
+                    {p.weeklyTemplate?.appliedAt ? (
+                      <span className={stale ? 'danger-text' : 'muted small'}>{timeAgo(p.weeklyTemplate.appliedAt)}{stale ? ' — overdue' : ''}</span>
+                    ) : (
+                      <span className="muted small">{row.enabled ? 'Never — apply once to start the weekly cycle' : '—'}</span>
+                    )}
+                  </td>
+                  <td data-label="">
+                    <button type="button" className="btn btn-ghost btn-sm" disabled={!p.weeklyTemplate?.enabled || applying === row.id} onClick={() => applyNow(row.id)}>
+                      {applying === row.id ? 'Applying...' : 'Apply now'}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {error && <p className="alert alert-error">{error}</p>}
+      <div className="row-gap">
+        <button type="button" className="btn btn-sm" disabled={!dirty || saving} onClick={save}>
+          {saving ? 'Saving...' : 'Save weekly stock'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Products() {
   const confirm = useConfirm();
   const [tick, setTick] = useState(0);
@@ -216,6 +337,7 @@ export default function Products() {
       )}
 
       <Status loading={loading} error={error} empty={!products.length} emptyText="You have not added any products yet." />
+      {!!products.length && <WeeklyStock key={tick} products={products} onChanged={reload} />}
       <div className="stack">
         {products.map((product) => {
           const [cls, label] = STATUS_TAG[product.status];

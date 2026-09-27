@@ -55,6 +55,7 @@ app.use('/api/customer', require('./routes/customer'));
 app.use('/api/family', require('./routes/family'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/cron', require('./routes/cron'));
 app.use('/api/chatbot', heavyLimiter);
 app.use('/api', require('./routes/misc'));
 

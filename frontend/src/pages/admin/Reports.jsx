@@ -41,6 +41,17 @@ const download = (r) => {
   URL.revokeObjectURL(url);
 };
 
+// Excel export (xlsx, lazy-loaded so it never weighs down the normal admin bundle).
+const downloadExcel = async (r) => {
+  const { head, rows } = rowsFor(r);
+  const XLSX = await import('xlsx');
+  const sheet = XLSX.utils.aoa_to_sheet([head, ...rows]);
+  sheet['!cols'] = head.map((_, col) => ({ wch: Math.max(head[col].length, ...rows.map((row) => String(row[col] ?? '').length)) + 2 }));
+  const book = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(book, sheet, LABEL[r.reportType].slice(0, 31));
+  XLSX.writeFile(book, `${r.reportType}-${new Date(r.generatedAt).toISOString().slice(0, 10)}.xlsx`);
+};
+
 function Metric({ label, value }) {
   return (
     <div className="metric">
@@ -154,6 +165,9 @@ export default function Reports() {
                   <span className="muted small">Generated {new Date(shown.generatedAt).toLocaleString()}</span>
                 </div>
                 <div className="ad-tools">
+                  <button className="btn btn-outline btn-sm" onClick={() => downloadExcel(shown)}>
+                    <IconDownload width={16} height={16} /> Excel
+                  </button>
                   <button className="btn btn-outline btn-sm" onClick={() => download(shown)}>
                     <IconDownload width={16} height={16} /> CSV
                   </button>

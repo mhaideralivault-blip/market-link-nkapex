@@ -26,6 +26,7 @@ const productSchema = new Schema(
     weeklyTemplate: {
       enabled: { type: Boolean, default: false },
       quantity: { type: Number, min: 0, default: 0 },
+      appliedAt: { type: Date }, // last time this product's stock was reset from the template
     },
     // Set false by admin moderation instead of hard-deleting when needed.
     isActive: { type: Boolean, default: true },

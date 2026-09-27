@@ -78,6 +78,8 @@ export const productsApi = {
   update: (id, data) => api.put(`/products/${id}`, data),
   setStatus: (id, status) => api.patch(`/products/${id}/status`, { status }),
   applyTemplate: () => api.post('/products/weekly-template/apply'),
+  applyTemplateOne: (id) => api.post(`/products/${id}/weekly-template/apply`),
+  bulkUpdateTemplates: (items) => api.patch('/products/weekly-template/bulk', { items }),
   remove: (id) => api.delete(`/products/${id}`),
 };
 export const farmersApi = {

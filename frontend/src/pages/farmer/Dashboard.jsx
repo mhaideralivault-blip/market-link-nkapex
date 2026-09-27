@@ -56,6 +56,13 @@ export default function Dashboard() {
         </div>
       </header>
       <ApprovalBanner />
+      {!!s?.staleWeeklyStock?.length && (
+        <p className="alert alert-info">
+          {s.staleWeeklyStock.length} product{s.staleWeeklyStock.length === 1 ? '' : 's'} with a weekly template {s.staleWeeklyStock.length === 1 ? 'hasn\'t' : 'haven\'t'} been refreshed in 7+ days
+          {' — '}
+          <Link to="/farmer/products">refresh weekly stock →</Link>
+        </p>
+      )}
       {error && <p className="alert alert-error">{error}</p>}
       {!s && loading && <div className="ad-skeleton">{Array.from({ length: 3 }).map((_, index) => <div key={index} className="skeleton" />)}</div>}
       {s && (
