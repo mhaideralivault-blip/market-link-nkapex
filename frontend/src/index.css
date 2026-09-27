@@ -859,6 +859,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--g
 .notfound { padding: 64px 0; }
 .nf-code { font-family: var(--font-display); font-size: clamp(6rem, 22vw, 14rem); font-weight: 700; line-height: .9; color: var(--green-100); letter-spacing: -.05em; }
 @media (max-width: 800px) { .pillars, .contact-grid { grid-template-columns: 1fr; } .static-stats li { padding: 16px 0; } }
+@media (max-width: 480px) { .static-stats { grid-template-columns: 1fr; } }
 
 /* ---- quick add + toasts ---- */
 .pc-add { position: absolute; right: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border: 0; border-radius: 99px; background: var(--green-900); color: #fff; font: inherit; font-weight: 700; font-size: .85rem; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.25); transition: transform .2s, background .2s, opacity .2s; }
@@ -1135,6 +1136,7 @@ a.kpi:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-col
 .report-list button:hover { background: var(--green-50); } .report-list button.on { background: var(--green-900); color: #fff; } .report-list button.on small { color: #cfe0d0; } .report-list small { color: var(--muted); }
 .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .metric { padding: 16px; border-radius: 18px; background: var(--cream-2); } .metric strong { display: block; font-family: var(--font-display); font-size: 1.9rem; color: var(--green-900); line-height: 1.1; }
+@media (max-width: 560px) { .metrics { grid-template-columns: 1fr 1fr; } }
 @media print { .site-header, .admin-side, .ad-tools, .report-cards, .report-split > aside, .tabbar, .toasts { display: none !important; } .admin-shell { display: block; } .ad-card { box-shadow: none; } }
 
 /* dialogs */
