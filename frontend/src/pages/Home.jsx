@@ -1,11 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import useFetch from '../hooks/useFetch';
+import useReveal from '../hooks/useReveal';
 import { homeApi, productsApi, imageUrl } from '../services/api';
 import { useAuth, homeFor } from '../context/AuthContext';
 import { ProductCard, SkeletonGrid, Stars } from '../components/Common';
 import { DAYS, cap, categoryEmoji, daysText, farmerPath, marketPath, nextOpenLabel } from '../utils';
 import { IconBasket, IconCash, IconChevronLeft, IconChevronRight, IconClock, IconMap } from '../components/Icons';
+
+// Wraps a section in a scroll-reveal; visible immediately for prefers-reduced-motion.
+function Reveal({ as: Tag = 'div', className = '', children, ...rest }) {
+  const [ref, visible] = useReveal();
+  return (
+    <Tag ref={ref} className={`reveal ${visible ? 'in' : ''} ${className}`} {...rest}>
+      {children}
+    </Tag>
+  );
+}
 
 const STEPS = [
   ['Discover', 'Find the farmers markets near you and see exactly who is selling this week.'],
@@ -25,16 +36,16 @@ function Hero() {
   const { user } = useAuth();
   return (
     <section className="hero hero-cinematic">
-      <div className="hero-bg" aria-hidden />
+      <div className="hero-bg hero-bg-settle" aria-hidden />
       <div className="hero-copy">
-        <span className="kicker">From our farms to your table</span>
-        <h1>
+        <span className="kicker hero-anim" style={{ '--d': '.05s' }}>From our farms to your table</span>
+        <h1 className="hero-anim" style={{ '--d': '.16s' }}>
           Freshness
           <br />
           in <em>every</em> step.
         </h1>
-        <p>We connect local farmers with you — bringing fresh, seasonal produce from our fields to your home.</p>
-        <div className="row-gap">
+        <p className="hero-anim" style={{ '--d': '.28s' }}>We connect local farmers with you — bringing fresh, seasonal produce from our fields to your home.</p>
+        <div className="row-gap hero-anim" style={{ '--d': '.38s' }}>
           {user ? (
             <Link className="btn btn-xl btn-glass" to={homeFor(user)}>
               Go to my dashboard <span aria-hidden>→</span>
@@ -46,14 +57,14 @@ function Hero() {
           )}
         </div>
       </div>
-      <span className="hero-mark" aria-hidden>
+      <span className="hero-mark hero-anim" style={{ '--d': '.5s' }} aria-hidden>
         Real Farmers
         <br />
         Real Food
         <br />
         Real People
       </span>
-      <div className="hero-scroll" aria-hidden>
+      <div className="hero-scroll hero-anim" style={{ '--d': '.6s' }} aria-hidden>
         <span className="hero-scroll-dot" />
         <small>Scroll to explore</small>
       </div>
@@ -70,10 +81,10 @@ const FEATURES = [
 
 function Features() {
   return (
-    <section className="features" aria-label="Why MarketLink">
+    <Reveal as="section" className="features" aria-label="Why MarketLink">
       <div className="wrap features-grid">
-        {FEATURES.map(([Icon, t, d]) => (
-          <div className="feature" key={t}>
+        {FEATURES.map(([Icon, t, d], index) => (
+          <div className="feature feature-anim" style={{ '--d': `${index * 0.08}s` }} key={t}>
             <span className="feature-ico">
               <Icon />
             </span>
@@ -84,7 +95,7 @@ function Features() {
           </div>
         ))}
       </div>
-    </section>
+    </Reveal>
   );
 }
 
@@ -110,7 +121,7 @@ function Marquee({ categories }) {
 function WeekCalendar({ markets }) {
   const today = todayName();
   return (
-    <section className="block week">
+    <Reveal as="section" className="block week">
       <div className="wrap">
         <div className="block-head">
           <div>
@@ -145,7 +156,7 @@ function WeekCalendar({ markets }) {
           })}
         </div>
       </div>
-    </section>
+    </Reveal>
   );
 }
 
@@ -153,7 +164,7 @@ function CategoryBento({ tiles: raw, loading }) {
   const tiles = raw.slice(0, 9).map((c) => ({ ...c, img: imageUrl(c.image, 320) }));
   if (!tiles.length && !loading) return null;
   return (
-    <section className="block">
+    <Reveal as="section" className="block">
       <div className="wrap">
         <div className="block-head">
           <div>
@@ -182,7 +193,7 @@ function CategoryBento({ tiles: raw, loading }) {
           ))}
         </div>
       </div>
-    </section>
+    </Reveal>
   );
 }
 
@@ -212,7 +223,7 @@ function Rail({ products }) {
   };
 
   return (
-    <section className="block rail-block">
+    <Reveal as="section" className="block rail-block">
       <div className="wrap">
         <div className="block-head">
           <div>
@@ -239,13 +250,13 @@ function Rail({ products }) {
           </div>
         ))}
       </div>
-    </section>
+    </Reveal>
   );
 }
 
 function Story() {
   return (
-    <section className="story">
+    <Reveal as="section" className="story">
       <div className="story-photo" aria-hidden />
       <div className="story-copy">
         <span className="kicker">How it works</span>
@@ -263,7 +274,7 @@ function Story() {
         </ol>
         <p className="story-note">Pickup only · Pay in person · No delivery fees</p>
       </div>
-    </section>
+    </Reveal>
   );
 }
 
@@ -271,7 +282,7 @@ function Growers({ growers, ready }) {
   const list = growers.map((grower) => ({ f: grower, count: grower.productCount, img: imageUrl(grower.image, 640) }));
   if (!list.length) return null;
   return (
-    <section className="block">
+    <Reveal as="section" className="block">
       <div className="wrap">
         <div className="block-head">
           <div>
@@ -298,7 +309,7 @@ function Growers({ growers, ready }) {
           ))}
         </div>
       </div>
-    </section>
+    </Reveal>
   );
 }
 
@@ -307,7 +318,7 @@ function Harvest({ categories }) {
   const { data, loading } = useFetch(() => productsApi.list({ category: tab, limit: 10, sort: 'rating' }), [tab]);
   const products = data?.products || [];
   return (
-    <section className="block">
+    <Reveal as="section" className="block">
       <div className="wrap">
         <div className="block-head">
           <div>
@@ -337,14 +348,14 @@ function Harvest({ categories }) {
           <p className="muted">Nothing in stock in this category right now.</p>
         )}
       </div>
-    </section>
+    </Reveal>
   );
 }
 
 function Markets({ markets }) {
   if (!markets.length) return null;
   return (
-    <section className="block markets-block">
+    <Reveal as="section" className="block markets-block">
       <div className="wrap">
         <div className="block-head">
           <div>
@@ -374,14 +385,14 @@ function Markets({ markets }) {
           ))}
         </ul>
       </div>
-    </section>
+    </Reveal>
   );
 }
 
 function Duo() {
   const { user } = useAuth();
   return (
-    <section className="duo">
+    <Reveal as="section" className="duo">
       <div className="duo-a">
         <span className="kicker">For shoppers</span>
         <h2>Eat what the season grows.</h2>
@@ -398,7 +409,7 @@ function Duo() {
           {user?.role === 'farmer' ? 'Manage stock' : 'Become a seller'} <span aria-hidden>→</span>
         </Link>
       </div>
-    </section>
+    </Reveal>
   );
 }
 

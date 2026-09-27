@@ -1585,3 +1585,33 @@ input:focus, select:focus, textarea:focus { border-color: var(--green-700); box-
 
 /* Bigger tap targets for the inline links on product / grower cards (Lighthouse: touch targets) */
 .product-body h3 a, .pc-stall a { display: inline-block; padding: 8px 0; }
+
+/* ---- home page motion: hero entrance + scroll reveals (home page only) ---- */
+@media (prefers-reduced-motion: no-preference) {
+  .home .hero-anim { opacity: 0; transform: translateY(24px); animation: home-fade-up .9s cubic-bezier(.2,.7,.2,1) both; animation-delay: var(--d, 0s); }
+  .home .hero-bg-settle { animation: home-bg-settle 1.8s ease-out both; }
+  .home .reveal { opacity: 0; transform: translateY(32px); transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); }
+  .home .reveal.in { opacity: 1; transform: translateY(0); }
+  .home .reveal .feature-anim, .home .reveal .grower, .home .reveal .bento-tile, .home .reveal .week-day, .home .reveal .story-photo, .home .reveal .duo > div {
+    opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; transition-delay: var(--d, 0s);
+  }
+  .home .reveal.in .feature-anim, .home .reveal.in .grower, .home .reveal.in .bento-tile, .home .reveal.in .week-day, .home .reveal.in .story-photo, .home .reveal.in .duo > div {
+    opacity: 1; transform: translateY(0);
+  }
+  .home .reveal .grower:nth-child(1) { --d: 0s; } .home .reveal .grower:nth-child(2) { --d: .08s; } .home .reveal .grower:nth-child(3) { --d: .16s; }
+  .home .reveal .bento-tile:nth-child(1) { --d: 0s; } .home .reveal .bento-tile:nth-child(2) { --d: .05s; } .home .reveal .bento-tile:nth-child(3) { --d: .1s; } .home .reveal .bento-tile:nth-child(4) { --d: .15s; } .home .reveal .bento-tile:nth-child(5) { --d: .2s; }
+  .home .reveal .week-day:nth-child(1) { --d: 0s; } .home .reveal .week-day:nth-child(2) { --d: .04s; } .home .reveal .week-day:nth-child(3) { --d: .08s; } .home .reveal .week-day:nth-child(4) { --d: .12s; } .home .reveal .week-day:nth-child(5) { --d: .16s; } .home .reveal .week-day:nth-child(6) { --d: .2s; } .home .reveal .week-day:nth-child(7) { --d: .24s; }
+  .home .reveal.in .rail-item { opacity: 0; transform: translateY(18px) scale(.98); animation: home-fade-up .6s cubic-bezier(.2,.7,.2,1) both; }
+  .home .reveal.in .rail-item:nth-child(1) { animation-delay: 0s; } .home .reveal.in .rail-item:nth-child(2) { animation-delay: .06s; } .home .reveal.in .rail-item:nth-child(3) { animation-delay: .12s; } .home .reveal.in .rail-item:nth-child(4) { animation-delay: .18s; } .home .reveal.in .rail-item:nth-child(5) { animation-delay: .24s; }
+  .home .market-rows li { opacity: 0; transform: translateX(-16px); transition: opacity .5s ease, transform .5s ease; }
+  .home .reveal.in .market-rows li:nth-child(1) { transition-delay: 0s; } .home .reveal.in .market-rows li:nth-child(2) { transition-delay: .06s; } .home .reveal.in .market-rows li:nth-child(3) { transition-delay: .12s; } .home .reveal.in .market-rows li:nth-child(4) { transition-delay: .18s; } .home .reveal.in .market-rows li:nth-child(5) { transition-delay: .24s; }
+  .home .reveal.in .market-rows li { opacity: 1; transform: translateX(0); }
+}
+@keyframes home-fade-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes home-bg-settle { from { transform: scale(1.06); } to { transform: scale(1); } }
+
+/* subtle, tasteful hover motion (works regardless of reduced-motion, since these are interaction-triggered not autoplay) */
+.home .grower-img { transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+.home .grower:hover .grower-img { transform: translateY(-4px); }
+.home .mr-no, .home .mr-go { transition: transform .3s ease; }
+.home .market-rows a:hover .mr-go { transform: rotate(45deg); }
