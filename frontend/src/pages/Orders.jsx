@@ -80,6 +80,9 @@ export default function Orders() {
               <StatusTag status={order.status} />
             </div>
             <OrderStepper status={order.status} compact />
+            {order.status === 'ready' && (
+              <p className="ready-hint">Ready for pickup — tap to view your pickup QR code →</p>
+            )}
             <div className="ot-items">
               {order.items.map((item) => (
                 <span key={item.product} className="chip-static">

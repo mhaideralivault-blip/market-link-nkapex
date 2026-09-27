@@ -152,6 +152,9 @@ export default function OrderDetail() {
         <OrderStepper status={o.status} />
       </div>
       {msg.text && <p className={`alert alert-${msg.type}`}>{msg.text}</p>}
+      {['placed', 'accepted'].includes(o.status) && (
+        <p className="alert alert-info">Your pickup QR code and code will appear right here on this page once the farmer marks this order ready.</p>
+      )}
       {o.status === 'ready' && o.pickupCode && !editing && <PickupQR code={o.pickupCode} />}
 
       {editing ? (
