@@ -952,6 +952,13 @@ a.stat:hover { border-color: var(--green-700); transform: translateY(-2px); tran
 .pw-toggle:hover { background: var(--cream-2); color: var(--green-900); }
 .pw-toggle[aria-pressed='true'] { color: var(--orange); }
 
+/* ---- form field validation ---- */
+.field-error { color: var(--danger); font-size: .82rem; font-weight: 500; }
+.field-hint { color: var(--muted); font-size: .82rem; font-weight: 400; }
+input[aria-invalid='true'], select[aria-invalid='true'], textarea[aria-invalid='true'] { border-color: var(--danger); }
+input[aria-invalid='true']:focus, select[aria-invalid='true']:focus, textarea[aria-invalid='true']:focus { box-shadow: 0 0 0 4px rgba(180,35,24,.12); }
+.pw-field:has(input[aria-invalid='true']) input { border-color: var(--danger); }
+
 /* ---- search suggestions ---- */
 .header-search { position: relative; }
 .suggest { position: absolute; top: calc(100% + 10px); left: 0; right: 0; z-index: 60; list-style: none; background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 24px 50px rgba(18,53,36,.2); padding: 8px; animation: pop .15s ease; }

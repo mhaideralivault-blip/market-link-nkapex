@@ -41,9 +41,9 @@ const farmerProfileSchema = new Schema(
 
 const userSchema = new Schema(
   {
-    name: { type: String, required: true, trim: true, maxlength: 100 },
+    name: { type: String, required: true, trim: true, minlength: 2, maxlength: 100 },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, minlength: 6, select: false },
+    password: { type: String, required: true, minlength: 8, select: false },
     phone: { type: String, required: true, trim: true },
     address: { type: String, required: true, trim: true },
     role: { type: String, enum: ['customer', 'farmer', 'admin'], default: 'customer' },

@@ -1,3 +1,18 @@
+// ---- form validation ----
+export const isValidEmail = (value = '') => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+export const isValidName = (value = '') => value.trim().length >= 2 && /^[\p{L}][\p{L}\s.'-]*$/u.test(value.trim());
+export const isValidPhone = (value = '') => value.replace(/\D/g, '').length >= 7 && /^[\d+\-\s()]{7,20}$/.test(value.trim());
+
+export const PASSWORD_RULES = [
+  { key: 'len', label: 'At least 8 characters', test: (v) => v.length >= 8 },
+  { key: 'upper', label: 'One uppercase letter', test: (v) => /[A-Z]/.test(v) },
+  { key: 'lower', label: 'One lowercase letter', test: (v) => /[a-z]/.test(v) },
+  { key: 'num', label: 'One number', test: (v) => /\d/.test(v) },
+  { key: 'special', label: 'One special character', test: (v) => /[^A-Za-z0-9]/.test(v) },
+];
+export const passwordIssues = (value = '') => PASSWORD_RULES.filter((rule) => !rule.test(value)).map((rule) => rule.label);
+export const isStrongPassword = (value = '') => passwordIssues(value).length === 0;
+
 export const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 export const cap = (s = '') => s.charAt(0).toUpperCase() + s.slice(1);
 export const money = (n) => `$${Number(n || 0).toFixed(2)}`;

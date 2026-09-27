@@ -6,7 +6,7 @@ import { useConfirm } from '../context/ConfirmContext';
 import { useToast } from '../context/ToastContext';
 import { EmptyState, PageHead, ProductCard, Status, StatusTag } from '../components/Common';
 import { IconUsers } from '../components/Icons';
-import { money } from '../utils';
+import { isValidEmail, money } from '../utils';
 
 const TABS = [['members', 'Members'], ['orders', 'Family orders'], ['favorites', 'Family favorites']];
 
@@ -39,6 +39,7 @@ export default function Family() {
 
   const invite = (event) => {
     event.preventDefault();
+    if (!isValidEmail(email)) return setError('Enter a valid e-mail address.');
     run(async () => {
       await familyApi.invite(email.trim());
       setEmail('');

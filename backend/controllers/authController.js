@@ -1,12 +1,12 @@
 const User = require('../models/User');
-const { AppError, requireFields, isEmail, signToken, cleanString } = require('../utils/helpers');
+const { AppError, requireFields, isEmail, isValidName, isValidPhone, passwordIssues, signToken, cleanString } = require('../utils/helpers');
 
-// Checks shared by customer and farmer sign-up: valid e-mail and a password of at least 6 characters.
+// Checks shared by customer and farmer sign-up: valid e-mail, contact number, and a strong password.
 const validateCommon = (body) => {
   if (!isEmail(body.email)) throw new AppError('Invalid e-mail address', 400);
-  if (typeof body.password !== 'string' || body.password.length < 6) {
-    throw new AppError('Password must be at least 6 characters', 400);
-  }
+  if (!isValidPhone(body.phone)) throw new AppError('Enter a valid contact number (at least 7 digits)', 400);
+  const issues = passwordIssues(body.password);
+  if (issues.length) throw new AppError(`Password must have ${issues.join(', ')}`, 400);
 };
 
 const sendAuth = (res, user, status = 200) =>
@@ -16,6 +16,7 @@ const sendAuth = (res, user, status = 200) =>
 const registerCustomer = async (req, res) => {
   const body = req.body;
   requireFields(body, ['name', 'email', 'phone', 'address', 'password']);
+  if (!isValidName(body.name)) throw new AppError('Enter a name of at least 2 letters', 400);
   validateCommon(body);
 
   const user = await User.create({
@@ -33,6 +34,8 @@ const registerCustomer = async (req, res) => {
 const registerFarmer = async (req, res) => {
   const body = req.body;
   requireFields(body, ['stallName', 'contactPerson', 'email', 'phone', 'address', 'password']);
+  if (!isValidName(body.contactPerson)) throw new AppError('Enter a contact person name of at least 2 letters', 400);
+  if (!cleanString(body.stallName) || body.stallName.trim().length < 2) throw new AppError('Enter a stall/business name of at least 2 characters', 400);
   validateCommon(body);
 
   const user = await User.create({
@@ -76,9 +79,9 @@ const updateMe = async (req, res) => {
 
 const changePassword = async (req, res) => {
   const { currentPassword, newPassword } = req.body;
-  if (typeof currentPassword !== 'string' || typeof newPassword !== 'string' || newPassword.length < 6) {
-    throw new AppError('Provide current password and a new password (min 6 chars)', 400);
-  }
+  if (typeof currentPassword !== 'string' || !currentPassword) throw new AppError('Current password is required', 400);
+  const issues = passwordIssues(newPassword);
+  if (issues.length) throw new AppError(`New password must have ${issues.join(', ')}`, 400);
   const user = await User.findById(req.user._id).select('+password');
   if (!(await user.matchPassword(currentPassword))) throw new AppError('Current password is incorrect', 401);
   user.password = newPassword;

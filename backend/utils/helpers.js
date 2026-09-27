@@ -54,6 +54,22 @@ const requireFields = (body, fields) => {
 
 const isEmail = (value) => typeof value === 'string' && /^\S+@\S+\.\S+$/.test(value);
 
+const isValidName = (value) => typeof value === 'string' && value.trim().length >= 2 && /^[\p{L}][\p{L}\s.'-]*$/u.test(value.trim());
+
+const isValidPhone = (value) => typeof value === 'string' && value.replace(/\D/g, '').length >= 7 && /^[\d+\-\s()]{7,20}$/.test(value.trim());
+
+// Mirrors the frontend rule: 8+ chars, upper, lower, digit, symbol.
+const passwordIssues = (value) => {
+  const v = typeof value === 'string' ? value : '';
+  const issues = [];
+  if (v.length < 8) issues.push('at least 8 characters');
+  if (!/[A-Z]/.test(v)) issues.push('an uppercase letter');
+  if (!/[a-z]/.test(v)) issues.push('a lowercase letter');
+  if (!/\d/.test(v)) issues.push('a number');
+  if (!/[^A-Za-z0-9]/.test(v)) issues.push('a special character');
+  return issues;
+};
+
 const signToken = (user) =>
   jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
@@ -87,6 +103,9 @@ module.exports = {
   getPagination,
   requireFields,
   isEmail,
+  isValidName,
+  isValidPhone,
+  passwordIssues,
   signToken,
   toGeoPoint,
   withinKm,
