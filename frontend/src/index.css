@@ -427,7 +427,7 @@ main:focus { outline: none; }
 .hero-scroll-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: hero-scroll-bounce 1.8s ease-in-out infinite; }
 @keyframes hero-scroll-bounce { 0%, 100% { transform: translateY(0); opacity: .5; } 50% { transform: translateY(10px); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .hero-scroll-dot { animation: none; } }
-@media (max-width: 720px) { .hero-mark { display: none; } }
+@media (max-width: 720px) { .hero-mark { display: none; } .hero-scroll { display: none; } }
 
 /* ---- navbar transparent over the home hero, solidifies on scroll ---- */
 .site-header.hdr-on-hero { position: absolute; top: 0; left: 0; right: 0; z-index: 40; background: transparent; backdrop-filter: none; border-bottom-color: transparent; transition: background .35s, border-color .35s; }
