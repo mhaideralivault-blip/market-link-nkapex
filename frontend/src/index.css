@@ -434,11 +434,12 @@ main:focus { outline: none; }
 .site-header.hdr-on-hero .topbar { background: transparent; }
 .site-header.hdr-on-hero .brand, .site-header.hdr-on-hero .nav-links > a, .site-header.hdr-on-hero .cat-btn, .site-header.hdr-on-hero .icon-btn { color: #fff; }
 .site-header.hdr-on-hero .brand-word span { color: var(--sun); }
-.site-header.hdr-on-hero .header-search { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.4); }
+.site-header.hdr-on-hero .header-search { background: rgba(8,20,14,.38); border-color: rgba(255,255,255,.45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .site-header.hdr-on-hero .header-search input { color: #fff; }
 .site-header.hdr-on-hero .header-search input::placeholder { color: rgba(255,255,255,.7); }
-.site-header.hdr-on-hero .header-search svg { color: #fff; }
-.site-header.hdr-on-hero .header-search button { background: rgba(255,255,255,.92); color: var(--green-900); }
+.site-header.hdr-on-hero .header-search > svg { color: #fff; }
+.site-header.hdr-on-hero .header-search button { background: rgba(255,255,255,.94); color: var(--green-900); }
+.site-header.hdr-on-hero .header-search button.mic-btn svg { color: inherit; }
 .site-header.hdr-on-hero .auth-actions .btn-outline { border-color: rgba(255,255,255,.6); color: #fff; }
 .site-header.hdr-on-hero .topbar-links a, .site-header.hdr-on-hero .topbar span:first-child { color: #f3ead2; }
 .hero-panel { background: rgba(255,253,248,.94); color: var(--ink); border-radius: 24px; padding: 20px; box-shadow: 0 30px 60px rgba(0,0,0,.35); }
