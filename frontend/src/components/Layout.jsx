@@ -10,14 +10,7 @@ import { DAYS, cap, farmerPath, marketPath, money, productPath } from '../utils'
 import { IconBell, IconCart, IconChevron, IconClose, IconHeart, IconHome, IconMap, IconMenu, IconMic, IconSearch, IconStore, IconUser } from './Icons';
 
 function Logo() {
-  return (
-    <svg className="logo" viewBox="0 0 40 40" width="38" height="38" aria-hidden>
-      <rect width="40" height="40" rx="12" fill="#123524" />
-      <path d="M20 31V19" stroke="#f7f2e8" strokeWidth="2.4" strokeLinecap="round" />
-      <path d="M20 21c0-5 3.5-8.5 9-8.5 0 5-3.5 8.5-9 8.5z" fill="#f2b632" />
-      <path d="M20 24c0-4-3-7-8-7 0 4 3 7 8 7z" fill="#e2542b" />
-    </svg>
-  );
+  return <img className="logo" src="/logo-mark.png" srcSet="/logo-mark.png 1x, /logo-mark@2x.png 2x" width="26" height="42" alt="" aria-hidden />;
 }
 
 const LINKS = {
