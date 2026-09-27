@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import useFetch from '../../hooks/useFetch';
 import { categoriesApi, productsApi, uploadImage, errorMessage, imageUrl } from '../../services/api';
 import ApprovalBanner from '../../components/ApprovalBanner';
@@ -72,7 +72,7 @@ function ProductForm({ initial, categories, onSaved, onCancel, id }) {
   };
 
   return (
-    <form className="card stack mb" onSubmit={submit}>
+    <form className="stack" onSubmit={submit}>
       <h2>{id ? 'Edit product' : 'Add product'}</h2>
       <div className="grid grid-3">
         <label>
@@ -305,6 +305,19 @@ export default function Products() {
   };
 
   const products = data?.products || [];
+  const closeEditor = () => setEditing(null);
+
+  useEffect(() => {
+    if (!editing) return undefined;
+    document.body.style.overflow = 'hidden';
+    const onKey = (event) => event.key === 'Escape' && closeEditor();
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', onKey);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing]);
 
   return (
     <>
@@ -322,18 +335,25 @@ export default function Products() {
       {msg.text && <p className={`alert alert-${msg.type}`}>{msg.text}</p>}
 
       {editing && (
-        <ProductForm
-          key={editing === 'new' ? 'new' : editing._id}
-          id={editing === 'new' ? null : editing._id}
-          initial={editing === 'new' ? EMPTY : toForm(editing)}
-          categories={cats.data?.categories || []}
-          onCancel={() => setEditing(null)}
-          onSaved={() => {
-            setEditing(null);
-            setMsg({ type: 'info', text: 'Product saved.' });
-            reload();
-          }}
-        />
+        <div className="modal-back" onMouseDown={(event) => event.target === event.currentTarget && closeEditor()}>
+          <div className="modal modal-lg" role="dialog" aria-modal="true" aria-label={editing === 'new' ? 'Add product' : 'Edit product'}>
+            <button type="button" className="icon-btn modal-close" aria-label="Close" onClick={closeEditor}>
+              ✕
+            </button>
+            <ProductForm
+              key={editing === 'new' ? 'new' : editing._id}
+              id={editing === 'new' ? null : editing._id}
+              initial={editing === 'new' ? EMPTY : toForm(editing)}
+              categories={cats.data?.categories || []}
+              onCancel={closeEditor}
+              onSaved={() => {
+                closeEditor();
+                setMsg({ type: 'info', text: 'Product saved.' });
+                reload();
+              }}
+            />
+          </div>
+        </div>
       )}
 
       <Status loading={loading} error={error} empty={!products.length} emptyText="You have not added any products yet." />
