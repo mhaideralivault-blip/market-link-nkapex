@@ -208,8 +208,9 @@ const applyProductTemplate = async (req, res) => {
   res.json({ success: true, product });
 };
 
-// Bulk-edit the weekly template (enabled + quantity) for several of the farmer's own products at once.
-const bulkUpdateTemplates = async (req, res) => {
+// Spreadsheet-style bulk edit: price, stock, visibility and/or weekly template for several of the
+// farmer's own products in one request. Each item only needs the keys it wants to change.
+const bulkUpdate = async (req, res) => {
   const items = Array.isArray(req.body.items) ? req.body.items : [];
   if (!items.length) throw new AppError('No items to update', 400);
   const ids = items.map((item) => item.id);
@@ -219,8 +220,13 @@ const bulkUpdateTemplates = async (req, res) => {
   for (const item of items) {
     const product = byId.get(String(item.id));
     if (!product) continue;
-    applyTemplateFields(product, { enabled: item.enabled, quantity: item.quantity });
+    const wasSoldOut = product.quantityAvailable <= 0;
+    if (item.price !== undefined) product.price = Math.max(0, Number(item.price) || 0);
+    if (item.quantityAvailable !== undefined) product.quantityAvailable = Math.max(0, Number(item.quantityAvailable) || 0);
+    if (item.available !== undefined) product.available = !!item.available;
+    if (item.weeklyTemplate) applyTemplateFields(product, item.weeklyTemplate);
     await product.save();
+    if (wasSoldOut && product.quantityAvailable > 0 && product.available) await notifyRestock(product);
     updated.push(product);
   }
   res.json({ success: true, updated: updated.length, products: updated });
@@ -265,7 +271,7 @@ module.exports = {
   setProductStatus,
   applyWeeklyTemplate,
   applyProductTemplate,
-  bulkUpdateTemplates,
+  bulkUpdate,
   applyAllWeeklyTemplates,
   deleteProduct,
   adminListProducts,

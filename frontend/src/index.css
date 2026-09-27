@@ -1555,6 +1555,17 @@ input:focus, select:focus, textarea:focus { border-color: var(--green-700); box-
 .pickup-qr img { border-radius: 16px; background: #fff; padding: 8px; box-shadow: var(--shadow); }
 .pickup-code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 2rem; font-weight: 800; letter-spacing: .25em; color: var(--green-900); }
 .ready-hint { font-size: .86rem; font-weight: 700; color: var(--green-900); background: var(--sun); display: inline-block; padding: 5px 12px; border-radius: 99px; margin: 2px 0 0; }
+
+/* ---- farmer weekly-stock / bulk-edit table ---- */
+.weekly-stock-table .qty { width: 78px; }
+.weekly-stock-table th, .weekly-stock-table td { vertical-align: middle; }
+.pt-product { display: flex; align-items: center; gap: 10px; }
+.pt-product .cart-thumb.sm { width: 40px; height: 40px; border-radius: 8px; }
+.pt-product small { display: block; }
+.pt-product .tag { margin-left: 6px; }
+.row-dirty td { background: #fff7e0; }
+.bulk-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; border-radius: 12px; background: var(--cream-2); }
+.bulk-bar.save-bar { background: var(--green-50); position: sticky; bottom: 12px; z-index: 5; box-shadow: 0 10px 30px rgba(18,53,36,.15); }
 .pickup-qr-actions { margin-top: 4px; justify-content: center; flex-wrap: wrap; }
 .pickup-qr-actions .btn svg { margin-right: 6px; vertical-align: -3px; }
 .scan-video { width: 100%; border-radius: 16px; background: #000; max-height: 260px; object-fit: cover; margin-bottom: 8px; }

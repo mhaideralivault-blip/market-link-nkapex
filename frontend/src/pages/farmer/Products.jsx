@@ -5,7 +5,7 @@ import ApprovalBanner from '../../components/ApprovalBanner';
 import { PageHead, Status } from '../../components/Common';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
-import { money, TAGS, timeAgo } from '../../utils';
+import { TAGS, timeAgo } from '../../utils';
 
 const todayInput = () => new Date().toISOString().slice(0, 10);
 
@@ -167,42 +167,64 @@ const STATUS_TAG = { available: ['tag', 'In stock'], sold_out: ['tag tag-warn', 
 const STALE_DAYS = 7;
 const daysSince = (date) => (date ? (Date.now() - new Date(date).getTime()) / 86_400_000 : Infinity);
 
-// Bulk-edit table: flip a product's weekly template on/off and set its quantity without opening the full edit form,
-// see each one's last-applied date at a glance, and refresh a single product's stock on the spot.
-function WeeklyStock({ products, onChanged }) {
+const rowFrom = (p) => ({
+  id: p._id,
+  price: p.price,
+  quantityAvailable: p.quantityAvailable,
+  available: p.available,
+  tplEnabled: !!p.weeklyTemplate?.enabled,
+  tplQuantity: p.weeklyTemplate?.quantity ?? 0,
+});
+const rowDiff = (row, p) => ({
+  price: Number(row.price) !== p.price,
+  quantityAvailable: Number(row.quantityAvailable) !== p.quantityAvailable,
+  available: row.available !== p.available,
+  weeklyTemplate: row.tplEnabled !== !!p.weeklyTemplate?.enabled || Number(row.tplQuantity || 0) !== (p.weeklyTemplate?.quantity ?? 0),
+});
+const rowIsDirty = (row, p) => Object.values(rowDiff(row, p)).some(Boolean);
+
+// Spreadsheet-style bulk editor: every product's price, stock, visibility and weekly template are
+// editable inline, several rows can be selected for a bulk action, and unsaved changes are saved
+// (or applied on the spot for the weekly template) without opening the full edit form per product.
+function ProductsTable({ products, onChanged, onEdit }) {
+  const confirm = useConfirm();
   const toast = useToast();
-  const [rows, setRows] = useState(() => products.map((p) => ({ id: p._id, enabled: !!p.weeklyTemplate?.enabled, quantity: p.weeklyTemplate?.quantity ?? 0 })));
+  const [rows, setRows] = useState(() => products.map(rowFrom));
+  const [selected, setSelected] = useState(() => new Set());
   const [applying, setApplying] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const byId = Object.fromEntries(products.map((p) => [p._id, p]));
 
   const setRow = (id, patch) => setRows((current) => current.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  const toggleSelected = (id) => setSelected((current) => { const next = new Set(current); next.has(id) ? next.delete(id) : next.add(id); return next; });
+  const toggleAll = () => setSelected((current) => (current.size === rows.length ? new Set() : new Set(rows.map((row) => row.id))));
 
-  const dirty = rows.some((row) => {
-    const p = byId[row.id];
-    return !!p.weeklyTemplate?.enabled !== row.enabled || (p.weeklyTemplate?.quantity ?? 0) !== Number(row.quantity || 0);
-  });
+  const dirtyRows = rows.filter((row) => rowIsDirty(row, byId[row.id]));
 
   const save = async () => {
     setError('');
-    setSaving(true);
+    setBusy(true);
     try {
-      const items = rows
-        .filter((row) => {
-          const p = byId[row.id];
-          return !!p.weeklyTemplate?.enabled !== row.enabled || (p.weeklyTemplate?.quantity ?? 0) !== Number(row.quantity || 0);
-        })
-        .map((row) => ({ id: row.id, enabled: row.enabled, quantity: Number(row.quantity) || 0 }));
-      await productsApi.bulkUpdateTemplates(items);
-      toast('Weekly stock template updated.');
+      const items = dirtyRows.map((row) => {
+        const diff = rowDiff(row, byId[row.id]);
+        const item = { id: row.id };
+        if (diff.price) item.price = Number(row.price) || 0;
+        if (diff.quantityAvailable) item.quantityAvailable = Number(row.quantityAvailable) || 0;
+        if (diff.available) item.available = row.available;
+        if (diff.weeklyTemplate) item.weeklyTemplate = { enabled: row.tplEnabled, quantity: Number(row.tplQuantity) || 0 };
+        return item;
+      });
+      await productsApi.bulkUpdate(items);
+      toast(`Saved ${items.length} product${items.length === 1 ? '' : 's'}.`);
       onChanged();
     } catch (err) {
       setError(errorMessage(err));
     } finally {
-      setSaving(false);
+      setBusy(false);
     }
   };
+  const discard = () => setRows(products.map(rowFrom));
 
   const applyNow = async (id) => {
     setError('');
@@ -218,24 +240,55 @@ function WeeklyStock({ products, onChanged }) {
     }
   };
 
+  const bulkAction = async (label, fn) => {
+    setError('');
+    setBusy(true);
+    try {
+      for (const id of selected) await fn(id);
+      toast(label);
+      setSelected(new Set());
+      onChanged();
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const bulkDelete = async () => {
+    if (!(await confirm({ title: `Delete ${selected.size} product${selected.size === 1 ? '' : 's'}?`, message: 'Customers will no longer see these. Past orders keep their history.', confirmText: 'Delete', danger: true }))) return;
+    bulkAction('Products deleted.', (id) => productsApi.remove(id));
+  };
+
   if (!products.length) return null;
 
   return (
     <div className="card stack mb weekly-stock">
       <div className="between">
         <div>
-          <h2>Weekly stock</h2>
-          <p className="muted small">Turn on a weekly template and set the quantity to restock automatically every Monday, or refresh a single product any time.</p>
+          <h2>Products</h2>
+          <p className="muted small">Edit price, stock and the weekly template inline. Select rows for bulk actions, or select none and just edit — a save bar appears when you have changes.</p>
         </div>
       </div>
+      {selected.size > 0 && (
+        <div className="bulk-bar">
+          <strong>{selected.size} selected</strong>
+          <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => bulkAction('Marked sold out.', (id) => productsApi.setStatus(id, 'sold_out'))}>Mark sold out</button>
+          <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => bulkAction('Hidden.', (id) => productsApi.setStatus(id, 'unavailable'))}>Hide</button>
+          <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => bulkAction('Shown again.', (id) => productsApi.setStatus(id, 'available'))}>Show</button>
+          <button type="button" className="btn btn-ghost btn-sm danger-text" disabled={busy} onClick={bulkDelete}>Delete</button>
+        </div>
+      )}
       <div className="table-wrap">
         <table className="table ad-table weekly-stock-table">
           <thead>
             <tr>
+              <th><input type="checkbox" checked={selected.size === rows.length && rows.length > 0} onChange={toggleAll} aria-label="Select all products" /></th>
               <th>Product</th>
-              <th>Current stock</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Visible</th>
               <th>Weekly template</th>
-              <th>Weekly quantity</th>
+              <th>Weekly qty</th>
               <th>Last applied</th>
               <th />
             </tr>
@@ -243,30 +296,46 @@ function WeeklyStock({ products, onChanged }) {
           <tbody>
             {rows.map((row) => {
               const p = byId[row.id];
-              const stale = row.enabled && daysSince(p.weeklyTemplate?.appliedAt) > STALE_DAYS;
+              const stale = row.tplEnabled && daysSince(p.weeklyTemplate?.appliedAt) > STALE_DAYS;
+              const [cls, label] = STATUS_TAG[p.status];
               return (
-                <tr key={row.id}>
-                  <td data-label="Product">{p.name}</td>
-                  <td data-label="Current stock">{p.quantityAvailable} {p.unit}</td>
-                  <td data-label="Weekly template">
-                    <label className="check">
-                      <input type="checkbox" checked={row.enabled} onChange={(event) => setRow(row.id, { enabled: event.target.checked })} /> Enabled
-                    </label>
+                <tr key={row.id} className={rowIsDirty(row, p) ? 'row-dirty' : ''}>
+                  <td data-label=""><input type="checkbox" checked={selected.has(row.id)} onChange={() => toggleSelected(row.id)} aria-label={`Select ${p.name}`} /></td>
+                  <td data-label="Product">
+                    <div className="pt-product">
+                      <span className="cart-thumb sm">{p.image ? <img src={imageUrl(p.image)} alt="" /> : <span aria-hidden>🥬</span>}</span>
+                      <span>
+                        <strong>{p.name}</strong>
+                        <span className={cls}>{label}</span>
+                        <small className="muted">{p.category?.name} / {p.unit}</small>
+                      </span>
+                    </div>
                   </td>
-                  <td data-label="Weekly quantity">
-                    <input className="qty" type="number" min="0" disabled={!row.enabled} value={row.quantity} onChange={(event) => setRow(row.id, { quantity: event.target.value })} />
+                  <td data-label="Price"><input className="qty" type="number" min="0" step="0.01" value={row.price} onChange={(event) => setRow(row.id, { price: event.target.value })} /></td>
+                  <td data-label="Stock"><input className="qty" type="number" min="0" value={row.quantityAvailable} onChange={(event) => setRow(row.id, { quantityAvailable: event.target.value })} /></td>
+                  <td data-label="Visible">
+                    <label className="check"><input type="checkbox" checked={row.available} onChange={(event) => setRow(row.id, { available: event.target.checked })} /></label>
+                  </td>
+                  <td data-label="Weekly template">
+                    <label className="check"><input type="checkbox" checked={row.tplEnabled} onChange={(event) => setRow(row.id, { tplEnabled: event.target.checked })} /> Enabled</label>
+                  </td>
+                  <td data-label="Weekly qty">
+                    <input className="qty" type="number" min="0" disabled={!row.tplEnabled} value={row.tplQuantity} onChange={(event) => setRow(row.id, { tplQuantity: event.target.value })} />
                   </td>
                   <td data-label="Last applied">
                     {p.weeklyTemplate?.appliedAt ? (
                       <span className={stale ? 'danger-text' : 'muted small'}>{timeAgo(p.weeklyTemplate.appliedAt)}{stale ? ' — overdue' : ''}</span>
                     ) : (
-                      <span className="muted small">{row.enabled ? 'Never — apply once to start the weekly cycle' : '—'}</span>
+                      <span className="muted small">{row.tplEnabled ? 'Never applied' : '—'}</span>
                     )}
                   </td>
                   <td data-label="">
-                    <button type="button" className="btn btn-ghost btn-sm" disabled={!p.weeklyTemplate?.enabled || applying === row.id} onClick={() => applyNow(row.id)}>
-                      {applying === row.id ? 'Applying...' : 'Apply now'}
-                    </button>
+                    <div className="row-gap">
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => onEdit(p)}>Edit</button>
+                      <button type="button" className="btn btn-ghost btn-sm" disabled={!p.weeklyTemplate?.enabled || applying === row.id} onClick={() => applyNow(row.id)}>
+                        {applying === row.id ? 'Applying...' : 'Apply now'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -275,17 +344,18 @@ function WeeklyStock({ products, onChanged }) {
         </table>
       </div>
       {error && <p className="alert alert-error">{error}</p>}
-      <div className="row-gap">
-        <button type="button" className="btn btn-sm" disabled={!dirty || saving} onClick={save}>
-          {saving ? 'Saving...' : 'Save weekly stock'}
-        </button>
-      </div>
+      {dirtyRows.length > 0 && (
+        <div className="bulk-bar save-bar">
+          <strong>{dirtyRows.length} unsaved change{dirtyRows.length === 1 ? '' : 's'}</strong>
+          <button type="button" className="btn btn-sm" disabled={busy} onClick={save}>{busy ? 'Saving...' : 'Save changes'}</button>
+          <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={discard}>Discard</button>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function Products() {
-  const confirm = useConfirm();
   const [tick, setTick] = useState(0);
   const [editing, setEditing] = useState(null); // null | 'new' | product
   const [msg, setMsg] = useState({ type: '', text: '' });
@@ -357,46 +427,7 @@ export default function Products() {
       )}
 
       <Status loading={loading} error={error} empty={!products.length} emptyText="You have not added any products yet." />
-      {!!products.length && <WeeklyStock key={tick} products={products} onChanged={reload} />}
-      <div className="stack">
-        {products.map((product) => {
-          const [cls, label] = STATUS_TAG[product.status];
-          return (
-            <div className="card prod-row" key={product._id}>
-              <div className="cart-thumb">{product.image ? <img src={imageUrl(product.image)} alt="" /> : <span aria-hidden>🥬</span>}</div>
-              <div className="cart-info">
-                <strong>{product.name}</strong> <span className={cls}>{label}</span>
-                <div className="muted small">
-                  {product.category?.name} · {money(product.price)} / {product.unit} · {product.quantityAvailable} in stock
-                  {product.weeklyTemplate?.enabled && ` · weekly template: ${product.weeklyTemplate.quantity}`}
-                </div>
-              </div>
-              <div className="row-gap">
-                <button className="btn btn-outline btn-sm" onClick={() => setEditing(product)}>
-                  Edit
-                </button>
-                {product.status !== 'sold_out' && (
-                  <button className="btn btn-ghost btn-sm" onClick={() => run(() => productsApi.setStatus(product._id, 'sold_out'))}>
-                    Mark sold out
-                  </button>
-                )}
-                {product.available ? (
-                  <button className="btn btn-ghost btn-sm" onClick={() => run(() => productsApi.setStatus(product._id, 'unavailable'))}>
-                    Hide temporarily
-                  </button>
-                ) : (
-                  <button className="btn btn-ghost btn-sm" onClick={() => run(() => productsApi.setStatus(product._id, 'available'))}>
-                    Show again
-                  </button>
-                )}
-                <button className="btn btn-ghost btn-sm danger-text" onClick={async () => (await confirm({ title: `Delete ${product.name}?`, message: 'Customers will no longer see this product. Past orders keep their history.', confirmText: 'Delete', danger: true })) && run(() => productsApi.remove(product._id), 'Product deleted.')}>
-                  Delete
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {!!products.length && <ProductsTable key={tick} products={products} onChanged={reload} onEdit={setEditing} />}
     </>
   );
 }

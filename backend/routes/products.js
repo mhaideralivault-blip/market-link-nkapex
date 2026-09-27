@@ -6,7 +6,7 @@ router.get('/', controller.listProducts);
 router.get('/mine', protect, authorize('farmer'), controller.myProducts);
 router.get('/admin/all', protect, authorize('admin'), controller.adminListProducts);
 router.post('/weekly-template/apply', protect, approvedFarmer, controller.applyWeeklyTemplate);
-router.patch('/weekly-template/bulk', protect, approvedFarmer, controller.bulkUpdateTemplates);
+router.patch('/bulk', protect, approvedFarmer, controller.bulkUpdate);
 router.get('/:id', controller.getProduct);
 router.post('/', protect, approvedFarmer, controller.createProduct);
 router.put('/:id', protect, approvedFarmer, controller.updateProduct);
