@@ -7,6 +7,7 @@ const compression = require('compression');
 const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/error');
 const { serveImage } = require('./controllers/uploadController');
+const { buildSitemapXml } = require('./utils/sitemap');
 
 if (!process.env.JWT_SECRET) {
   console.error('JWT_SECRET is not set. Add it to backend/.env');
@@ -61,6 +62,19 @@ app.use('/api', require('./routes/misc'));
 
 app.get('/', (req, res) => {
   res.send('MarketLink Apex API is running...');
+});
+
+// Always computed live from the DB, so it's correct on Vercel too (serverless writes to
+// frontend/public don't persist to what's actually served). Cached for an hour at the edge.
+app.get('/sitemap.xml', async (req, res, next) => {
+  try {
+    const siteUrl = process.env.SITE_URL || 'https://market-link-frontend.vercel.app';
+    const xml = await buildSitemapXml(siteUrl);
+    res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=7200');
+    res.type('application/xml').send(xml);
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.use(notFound);

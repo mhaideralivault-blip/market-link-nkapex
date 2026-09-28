@@ -16,7 +16,8 @@
     "db:init": "node scripts/init-db.js",
     "db:images": "node scripts/import-images.js",
     "seed:harvest": "node scripts/seed-harvest.js",
-    "test:harvest": "node scripts/e2e-harvest.js"
+    "test:harvest": "node scripts/e2e-harvest.js",
+    "sitemap": "node scripts/generate-sitemap.js"
   },
   "keywords": [],
   "author": "",

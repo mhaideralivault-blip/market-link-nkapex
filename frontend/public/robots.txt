@@ -4,3 +4,5 @@ Disallow: /admin
 Disallow: /farmer
 Disallow: /cart
 Disallow: /orders
+
+Sitemap: https://market-link-frontend.vercel.app/sitemap.xml
